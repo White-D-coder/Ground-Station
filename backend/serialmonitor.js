@@ -145,6 +145,12 @@ class SerialMonitor extends EventEmitter {
         this.buffer = Buffer.concat([this.buffer, buffer]);
 
         this.parseBuffer();
+
+        // 4. Fallback: If text didn't match JSON or CSV, emit as raw text object
+        // This ensures the frontend ALWAYS shows something.
+        if (text.length > 0) {
+            this.emit('telemetry', { type: 'text', data: { raw_message: text }, raw: text });
+        }
     }
 
     parseBuffer() {

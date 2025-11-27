@@ -1,0 +1,47 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-primary);
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Glassmorphism Sidebar Container */
+.main-content> :first-child {
+  backdrop-filter: blur(10px);
+  background: var(--bg-secondary) !important;
+  border-right: var(--glass-border) !important;
+}
+
+.dashboard-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  gap: 15px;
+  overflow: hidden;
+}
+
+.top-row {
+  flex: 1;
+  /* Map takes more space */
+  display: flex;
+  gap: 15px;
+  min-height: 0;
+}
+
+.bottom-row {
+  height: 250px;
+  /* Fixed height for charts/logs */
+  display: flex;
+  gap: 15px;
+  min-height: 0;
+  /* Allow shrinking */
+}

@@ -4,7 +4,8 @@
     "description": "Professional Desktop Ground Station",
     "main": "electron-main.js",
     "scripts": {
-        "start": "electron ."
+        "start": "electron .",
+        "dev": "NODE_ENV=development electron ."
     },
     "author": "Deep",
     "license": "ISC",

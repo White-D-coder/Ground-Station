@@ -19,7 +19,14 @@ function createWindow() {
         }
     });
 
-    mainWindow.loadFile(path.join(__dirname, 'frontend/index.html'));
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+        mainWindow.loadURL('http://localhost:5173');
+        mainWindow.webContents.openDevTools();
+    } else {
+        mainWindow.loadFile(path.join(__dirname, 'frontend/dist/index.html'));
+        mainWindow.webContents.openDevTools(); // Uncomment to debug production
+    }
 }
 
 app.whenReady().then(() => {
@@ -37,7 +44,15 @@ app.on('window-all-closed', () => {
 // --- IPC Handlers ---
 
 ipcMain.handle('serial:list', async () => {
-    return await backend.serial.listPorts();
+    console.log('[Main] Requesting serial port list...');
+    try {
+        const ports = await backend.serial.listPorts();
+        console.log('[Main] Ports found:', ports.length);
+        return ports;
+    } catch (err) {
+        console.error('[Main] Error listing ports:', err);
+        return [];
+    }
 });
 
 ipcMain.handle('serial:connect', (event, port, baud) => {

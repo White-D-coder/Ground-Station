@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBITAL // COMMAND</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/globe.gl"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- 3D GLOBE CONTAINER -->
+    <div id="globe-viz"></div>
+
+    <!-- HUD OVERLAY -->
+    <div class="hud-container">
+
+        <!-- TOP BAR -->
+        <header class="hud-top">
+            <div class="hud-brand">
+                <div class="logo-mark"></div>
+                <div class="brand-text">ORBITAL <span class="highlight">PRIME</span></div>
+            </div>
+            <div class="hud-stats">
+                <div class="stat-pill">
+                    <span class="label">LINK</span>
+                    <span class="value" id="status-link">OFFLINE</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">GPS</span>
+                    <span class="value" id="status-gps">SEARCHING</span>
+                </div>
+                <div class="stat-pill time">
+                    <span class="value" id="clock">00:00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- LEFT WING: FLIGHT DYNAMICS & CONTROLS -->
+        <aside class="hud-panel left">
+            <div class="panel-content">
+                <div class="section-title">FLIGHT DYNAMICS</div>
+                <div class="dynamics-grid">
+                    <div class="dyn-item">
+                        <div class="dyn-val" id="val-pitch">0°</div>
+                        <div class="dyn-label">PITCH</div>
+                    </div>
+                    <div class="dyn-item">
+                        <div class="dyn-val" id="val-roll">0°</div>
+                        <div class="dyn-label">ROLL</div>
+                    </div>
+                    <div class="dyn-item">
+                        <div class="dyn-val" id="val-yaw">0°</div>
+                        <div class="dyn-label">YAW</div>
+                    </div>
+                </div>
+
+                <div class="section-title mt-4">CONNECTION</div>
+                <div class="control-row">
+                    <select id="port-select" class="fui-select"></select>
+                    <select id="baud-select" class="fui-select" style="width: 80px; margin-left: 5px;">
+                        <option value="9600">9600</option>
+                        <option value="57600">57600</option>
+                        <option value="115200" selected>115200</option>
+                    </select>
+                    <button id="btn-refresh" class="fui-btn icon">↻</button>
+                </div>
+                <button id="btn-connect" class="fui-btn primary">INITIALIZE LINK</button>
+                <button id="btn-disconnect" class="fui-btn danger hidden">TERMINATE</button>
+
+                <div class="section-title mt-4">MISSION</div>
+                <div class="control-row">
+                    <button id="btn-start-mission" class="fui-btn success">REC</button>
+                    <button id="btn-stop-mission" class="fui-btn danger hidden">STOP</button>
+                    <button onclick="exportData('csv')" class="fui-btn">CSV</button>
+                </div>
+
+                <div class="console-box" id="console-output">
+                    <div class="log-line system">System Ready.</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT WING: SYSTEM HEALTH -->
+        <aside class="hud-panel right">
+            <div class="panel-content">
+                <div class="section-title">SYSTEM VITALITY</div>
+
+                <div class="vital-row">
+                    <div class="vital-item">
+                        <div class="vital-val" id="val-sats">0</div>
+                        <div class="vital-label">SATS</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-val" id="val-hdop">0.0</div>
+                        <div class="vital-label">HDOP</div>
+                    </div>
+                </div>
+
+                <div class="vital-row">
+                    <div class="vital-item">
+                        <div class="vital-val" id="val-temp">0<span class="unit">°C</span></div>
+                        <div class="vital-label">TEMP</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-val" id="val-rssi">0<span class="unit">dBm</span></div>
+                        <div class="vital-label">RSSI</div>
+                    </div>
+                </div>
+
+                <div class="section-title mt-4">PRIMARY TELEMETRY</div>
+                <div class="telemetry-big">
+                    <div class="t-row">
+                        <span class="t-lbl">ALTITUDE</span>
+                        <span class="t-val" id="val-alt">0.0</span>
+                        <span class="t-unit">m</span>
+                    </div>
+                    <div class="t-row">
+                        <span class="t-lbl">VELOCITY</span>
+                        <span class="t-val" id="val-speed">0.0</span>
+                        <span class="t-unit">km/h</span>
+                    </div>
+                    <div class="t-row">
+                        <span class="t-lbl">BATTERY</span>
+                        <span class="t-val" id="val-vbat">0.0</span>
+                        <span class="t-unit">V</span>
+                    </div>
+                </div>
+
+                <div class="geo-coords">
+                    <div id="val-lat">--.------</div>
+                    <div id="val-lon">--.------</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- BOTTOM DECK: COMMAND CENTER (CHARTS) -->
+        <footer class="hud-bottom">
+            <div class="deck-title">DATA VISUALIZATION ARRAY</div>
+            <div class="chart-deck">
+                <div class="chart-card"><canvas id="chart1"></canvas></div> <!-- Alt -->
+                <div class="chart-card"><canvas id="chart2"></canvas></div> <!-- Speed -->
+                <div class="chart-card"><canvas id="chart3"></canvas></div> <!-- Bat -->
+                <div class="chart-card"><canvas id="chart4"></canvas></div> <!-- RSSI -->
+                <div class="chart-card"><canvas id="chart-pitch"></canvas></div>
+                <div class="chart-card"><canvas id="chart-roll"></canvas></div>
+                <div class="chart-card"><canvas id="chart-yaw"></canvas></div>
+                <div class="chart-card"><canvas id="chart-temp"></canvas></div>
+            </div>
+        </footer>
+
+        <!-- HIDDEN INPUTS FOR LOGIC -->
+        <div class="hidden">
+            <input type="text" id="can-iface" value="can0">
+            <select id="lora-port-select"></select>
+            <button id="btn-can-listen"></button>
+            <button id="btn-lora-listen"></button>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="map.js"></script>
+    <script src="charts.js"></script>
+    <script src="renderer.js"></script>
+</body>
+
+</html>
