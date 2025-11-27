@@ -133,7 +133,13 @@ ipcMain.handle('export:save', async (event, { type, data }) => {
 // --- Real-time Emitters ---
 
 backend.serial.on('telemetry', (data) => {
-    if (mainWindow) mainWindow.webContents.send('telemetry:update', data);
+    // Send data to renderer
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('serial:data', {
+            data: data.data,
+            raw: data.raw
+        });
+    }
 });
 
 backend.serial.on('raw', (data) => {
