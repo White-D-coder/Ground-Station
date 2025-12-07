@@ -53,28 +53,29 @@ export default function Map({ lat, lon }) {
     const center = hasGPS ? position : (laptopPos || [0, 0]);
 
     return (
-        <div style={{
-            flex: 1,
-            minWidth: '300px',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            border: '1px solid var(--border-color)',
-            position: 'relative'
-        }}>
+        <div className="widget" style={{ flex: 1, height: '100%', minWidth: '300px', padding: 0, position: 'relative' }}>
+            <div className="widget-header" style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 1000, background: 'rgba(0,0,0,0.6)', padding: '5px 10px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
+                GPS TRACKING
+                {hasGPS && <span style={{ marginLeft: '10px', color: 'var(--success-color)', fontSize: '0.7rem' }}>● LOCKED</span>}
+            </div>
+
             {!hasGPS && !laptopPos && (
                 <div style={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    zIndex: 1000,
+                    background: 'rgba(0,0,0,0.8)',
+                    zIndex: 999,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'white'
+                    flexDirection: 'column',
+                    gap: '10px'
                 }}>
-                    NO GPS DATA
+                    <div style={{ color: 'var(--text-muted)', letterSpacing: '2px' }}>NO GPS SIGNAL</div>
+                    <div style={{ width: '40px', height: '2px', background: 'var(--danger-color)' }}></div>
                 </div>
             )}
+
             <MapContainer center={center} zoom={15} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
                     attribution='&copy; Google Maps'
@@ -83,16 +84,20 @@ export default function Map({ lat, lon }) {
                 {hasGPS && (
                     <Marker position={position}>
                         <Popup>
-                            Vehicle Location<br />
-                            {lat}, {lon}
+                            <div style={{ color: 'black' }}>
+                                <strong>Vehicle</strong><br />
+                                {lat.toFixed(6)}, {lon.toFixed(6)}
+                            </div>
                         </Popup>
                     </Marker>
                 )}
                 {laptopPos && (
                     <Marker position={laptopPos} opacity={0.7}>
                         <Popup>
-                            Laptop Location<br />
-                            {laptopPos[0].toFixed(6)}, {laptopPos[1].toFixed(6)}
+                            <div style={{ color: 'black' }}>
+                                <strong>Base Station</strong><br />
+                                {laptopPos[0].toFixed(6)}, {laptopPos[1].toFixed(6)}
+                            </div>
                         </Popup>
                     </Marker>
                 )}

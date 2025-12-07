@@ -5,54 +5,61 @@ const Segment = ({ label, value }) => {
 
     return (
         <div style={{
-            background: 'rgba(20, 20, 20, 0.6)',
-            border: '1px solid rgba(0, 243, 255, 0.2)',
-            borderRadius: '4px',
+            backgroundColor: 'var(--bg-tertiary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '6px',
             padding: '12px',
-            minWidth: '140px',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-            backdropFilter: 'blur(5px)',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-            transition: 'all 0.3s ease'
-        }}
-            className="data-segment"
-        >
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)',
+            transition: 'all 0.3s ease',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
             <div style={{
-                color: 'var(--accent-color)',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '4px',
+                height: '100%',
+                background: 'var(--accent-color)',
+                opacity: 0.5
+            }} />
+
+            <div style={{
+                color: 'var(--text-secondary)',
                 fontSize: '0.7rem',
                 fontWeight: '600',
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
-                borderBottom: '1px solid rgba(0, 243, 255, 0.1)',
-                paddingBottom: '4px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
                 {label}
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-color)', boxShadow: 'var(--accent-glow)' }}></div>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success-color)', boxShadow: '0 0 5px var(--success-color)' }} />
             </div>
 
             {isObj ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '5px' }}>
                     {Object.entries(value).map(([k, v]) => (
-                        <div key={k} style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ color: '#666', fontSize: '0.65rem', textTransform: 'uppercase' }}>{k}</span>
-                            <span style={{ color: '#fff', fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>
+                        <div key={k} style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '4px' }}>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{k}</div>
+                            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                                 {typeof v === 'number' ? v.toFixed(2) : String(v)}
-                            </span>
+                            </div>
                         </div>
                     ))}
                 </div>
             ) : (
                 <div style={{
                     fontSize: '1.8rem',
-                    color: '#fff',
+                    color: 'var(--accent-color)',
                     fontFamily: 'var(--font-mono)',
-                    textAlign: 'center',
-                    textShadow: '0 0 10px rgba(255,255,255,0.2)'
+                    fontWeight: 'bold',
+                    textShadow: '0 0 10px var(--accent-glow)',
+                    marginTop: 'auto'
                 }}>
                     {typeof value === 'number' ? value.toFixed(2) : String(value)}
                 </div>
@@ -64,37 +71,31 @@ const Segment = ({ label, value }) => {
 export default function DataSegments({ data }) {
     if (!data || Object.keys(data).length === 0) {
         return (
-            <div style={{
-                flex: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#444',
-                border: '1px dashed #333',
-                borderRadius: '8px',
-                background: 'rgba(0,0,0,0.2)',
-                flexDirection: 'column',
-                gap: '10px'
-            }}>
-                <div style={{ fontSize: '2rem', opacity: 0.5 }}>📡</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>WAITING FOR DATA STREAM...</div>
+            <div className="widget" style={{ flex: 2, alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{
+                    color: 'var(--text-muted)',
+                    fontSize: '1.2rem',
+                    letterSpacing: '2px',
+                    animation: 'pulse 2s infinite'
+                }}>
+                    WAITING FOR TELEMETRY...
+                </div>
             </div>
         );
     }
 
     return (
-        <div style={{
-            flex: 2,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '12px',
-            alignContent: 'flex-start',
-            overflowY: 'auto',
-            paddingRight: '5px'
-        }}>
-            {Object.entries(data).map(([key, value]) => (
-                <Segment key={key} label={key} value={value} />
-            ))}
+        <div className="widget" style={{ flex: 2, overflowY: 'auto', background: 'transparent', border: 'none', padding: 0 }}>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                gap: '12px',
+                paddingBottom: '10px'
+            }}>
+                {Object.entries(data).map(([key, value]) => (
+                    <Segment key={key} label={key} value={value} />
+                ))}
+            </div>
         </div>
     );
 }

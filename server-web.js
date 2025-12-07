@@ -1,0 +1,89 @@
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const path = require('path');
+const cors = require('cors');
+const backend = require('./backend/server');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(cors());
+app.use(express.json());
+
+// Serve Frontend
+const distPath = path.join(__dirname, 'frontend/dist');
+app.use(express.static(distPath));
+
+// API Endpoints to mimic Electron IPC
+app.get('/api/ports', async (req, res) => {
+    try {
+        const ports = await backend.serial.listPorts();
+        res.json(ports);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/connect', (req, res) => {
+    const { port, baud } = req.body;
+    try {
+        backend.serial.connect(port, parseInt(baud));
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/disconnect', (req, res) => {
+    try {
+        backend.serial.disconnect();
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// WebSocket for Real-time Data
+wss.on('connection', (ws) => {
+    console.log('Client connected');
+
+    // Send initial state if needed
+
+    ws.on('close', () => console.log('Client disconnected'));
+});
+
+// Bridge Backend Events to WebSocket
+backend.serial.on('telemetry', (data) => {
+    broadcast({ type: 'telemetry', data });
+});
+
+backend.serial.on('raw', (data) => {
+    broadcast({ type: 'raw', data });
+});
+
+function broadcast(msg) {
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(msg));
+        }
+    });
+}
+
+// Fallback for SPA
+app.get(/(.*)/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+});
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+    console.log(`
+    🚀 Ground Station Web Server Running!
+    
+    > Local:   http://localhost:${PORT}
+    > Network: http://0.0.0.0:${PORT}
+    
+    Access this URL from any device on your network.
+    `);
+});

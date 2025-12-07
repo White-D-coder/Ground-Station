@@ -5,7 +5,102 @@ const fs = require('fs');
 const xlsx = require('xlsx');
 const xmlbuilder = require('xmlbuilder');
 
+// Web Server Dependencies
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const cors = require('cors');
+
 let mainWindow;
+let server; // HTTP Server instance
+
+function startWebServer() {
+    const expressApp = express();
+    server = http.createServer(expressApp);
+    const wss = new WebSocket.Server({ server });
+
+    expressApp.use(cors());
+    expressApp.use(express.json());
+
+    // Serve Frontend (Production Path)
+    // In production, resources are in app.asar
+    // We need to serve from where the files actually are
+    let distPath;
+    if (app.isPackaged) {
+        distPath = path.join(process.resourcesPath, 'app/frontend/dist');
+        // Fallback if not found (sometimes structure varies)
+        if (!fs.existsSync(distPath)) {
+            distPath = path.join(__dirname, 'frontend/dist');
+        }
+    } else {
+        distPath = path.join(__dirname, 'frontend/dist');
+    }
+
+    expressApp.use(express.static(distPath));
+
+    // API Endpoints
+    expressApp.get('/api/ports', async (req, res) => {
+        try {
+            const ports = await backend.serial.listPorts();
+            res.json(ports);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    expressApp.post('/api/connect', (req, res) => {
+        const { port, baud } = req.body;
+        try {
+            backend.serial.connect(port, parseInt(baud));
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    expressApp.post('/api/disconnect', (req, res) => {
+        try {
+            backend.serial.disconnect();
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // WebSocket Broadcast
+    function broadcast(msg) {
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(msg));
+            }
+        });
+    }
+
+    // Bridge Events
+    backend.serial.on('telemetry', (data) => broadcast({ type: 'telemetry', data }));
+    backend.serial.on('raw', (data) => broadcast({ type: 'raw', data }));
+
+    // Fallback for SPA
+    expressApp.get(/(.*)/, (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+
+    const PORT = 3001;
+    server.on('error', (e) => {
+        if (e.code === 'EADDRINUSE') {
+            console.error(`[Main] Port ${PORT} is already in use. Is another instance running?`);
+            // Optional: You could choose to not crash here, or try another port.
+            // For now, we log it so it doesn't show a scary dialog if handled upstream, 
+            // but since it's the main process, we might want to let it fail or notify the user.
+        } else {
+            console.error('[Main] Server error:', e);
+        }
+    });
+
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`[Main] Web Server running on port ${PORT}`);
+    });
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -31,6 +126,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
     createWindow();
+    startWebServer();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -39,6 +135,12 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+    if (server) {
+        server.close();
+    }
 });
 
 // --- IPC Handlers ---
@@ -100,11 +202,31 @@ ipcMain.handle('export:save', async (event, { type, data }) => {
             fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
         } else if (type === 'csv') {
             if (data.length > 0) {
-                const headers = Object.keys(data[0]);
+                // Helper to flatten object
+                const flatten = (obj, prefix = '', res = {}) => {
+                    for (const key in obj) {
+                        const val = obj[key];
+                        const newKey = prefix ? `${prefix}.${key}` : key;
+                        if (val && typeof val === 'object' && !Array.isArray(val)) {
+                            flatten(val, newKey, res);
+                        } else {
+                            res[newKey] = val;
+                        }
+                    }
+                    return res;
+                };
+
+                const flatData = data.map(d => flatten(d));
+                const headers = [...new Set(flatData.flatMap(d => Object.keys(d)))];
+
                 const csvContent = [
                     headers.join(','),
-                    ...data.map(row => headers.map(h => row[h]).join(','))
+                    ...flatData.map(row => headers.map(h => {
+                        const val = row[h];
+                        return val === undefined ? '' : JSON.stringify(val);
+                    }).join(','))
                 ].join('\n');
+
                 fs.writeFileSync(filePath, csvContent);
             }
         } else if (type === 'xlsx') {
@@ -133,27 +255,31 @@ ipcMain.handle('export:save', async (event, { type, data }) => {
 // --- Real-time Emitters ---
 
 backend.serial.on('telemetry', (data) => {
-    // Send data to renderer
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('serial:data', {
-            data: data.data,
-            raw: data.raw
-        });
-    }
+    try {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('telemetry:update', data);
+    } catch (e) { console.error('Error sending telemetry:', e); }
 });
 
 backend.serial.on('raw', (data) => {
-    if (mainWindow) mainWindow.webContents.send('raw:update', data);
+    try {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('raw:update', data);
+    } catch (e) { console.error('Error sending raw data:', e); }
 });
 
 backend.serial.on('schema_update', (schema) => {
-    if (mainWindow) mainWindow.webContents.send('schema:update', schema);
+    try {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('schema:update', schema);
+    } catch (e) { console.error('Error sending schema:', e); }
 });
 
 backend.can.on('can_update', (data) => {
-    if (mainWindow) mainWindow.webContents.send('can:update', data);
+    try {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('can:update', data);
+    } catch (e) { console.error('Error sending CAN data:', e); }
 });
 
 backend.lora.on('lora_update', (data) => {
-    if (mainWindow) mainWindow.webContents.send('lora:update', data);
+    try {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lora:update', data);
+    } catch (e) { console.error('Error sending LoRa data:', e); }
 });

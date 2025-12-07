@@ -1,26 +1,47 @@
 {
-    "name": "ground-station-pro",
+    "name": "ground-station",
     "version": "1.0.0",
     "description": "Professional Desktop Ground Station",
     "main": "electron-main.js",
     "scripts": {
         "start": "electron .",
-        "dev": "NODE_ENV=development electron ."
+        "dev": "NODE_ENV=development electron .",
+        "serve": "node server-web.js",
+        "dist": "cd frontend && npm run build && cd .. && electron-builder"
+    },
+    "build": {
+        "appId": "com.GroundStation.groundstation",
+        "productName": "GroundStation Ground Station",
+        "mac": {
+            "category": "public.app-category.utilities",
+            "target": "dmg"
+        },
+        "files": [
+            "electron-main.js",
+            "electron-preload.js",
+            "backend/**/*",
+            "frontend/dist/**/*",
+            "package.json",
+            "node_modules/**/*"
+        ],
+        "directories": {
+            "output": "release"
+        }
     },
     "author": "Deep",
     "license": "ISC",
     "devDependencies": {
-        "electron": "^39.2.3",
-        "electron-builder": "^24.9.1",
-        "electron-prebuilt": "npm:electron@^28.0.0"
+        "electron": "^28.0.0",
+        "electron-builder": "^24.9.1"
     },
     "dependencies": {
         "@serialport/parser-readline": "^13.0.0",
         "chart.js": "^4.4.1",
+        "cors": "^2.8.5",
+        "express": "^5.1.0",
         "leaflet": "^1.9.4",
         "mongodb": "^6.3.0",
         "serialport": "^12.0.0",
-        "sqlite3": "^5.1.7",
         "ws": "^8.16.0",
         "xlsx": "^0.18.5",
         "xmlbuilder": "^15.1.1"

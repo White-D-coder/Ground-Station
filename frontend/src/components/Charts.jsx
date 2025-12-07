@@ -31,25 +31,22 @@ const options = {
             enabled: true,
             backgroundColor: 'rgba(0,0,0,0.8)',
             titleColor: '#fff',
-            bodyColor: '#ccc',
+            bodyColor: '#fff',
             borderColor: '#333',
             borderWidth: 1
         }
     },
     scales: {
-        x: {
-            display: false,
-            grid: { color: '#222' }
-        },
+        x: { display: false },
         y: {
-            grid: { color: '#222' },
-            ticks: { color: '#666', font: { size: 9, family: 'JetBrains Mono' } },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#5c6b7f', font: { size: 10, family: 'monospace' } },
             border: { display: false }
         }
     },
     elements: {
-        point: { radius: 0, hitRadius: 10 },
-        line: { borderWidth: 1.5, tension: 0.2 }
+        point: { radius: 0, hitRadius: 10, hoverRadius: 4 },
+        line: { borderWidth: 2, tension: 0.3 } // Smoother lines
     }
 };
 
@@ -59,14 +56,22 @@ const createData = (color, data) => ({
         {
             data,
             borderColor: color,
-            backgroundColor: color,
-            borderWidth: 1.5
+            backgroundColor: (context) => {
+                const ctx = context.chart.ctx;
+                const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                gradient.addColorStop(0, color.replace('1)', '0.5)'));
+                gradient.addColorStop(1, 'rgba(0,0,0,0)');
+                return gradient;
+            },
+            fill: true,
+            borderWidth: 2
         },
     ],
 });
 
 export default function Charts({ data }) {
     const [datasets, setDatasets] = useState({});
+    const [selectedKeys, setSelectedKeys] = useState([]);
     const maxPoints = 100;
 
     useEffect(() => {
@@ -74,12 +79,32 @@ export default function Charts({ data }) {
 
         setDatasets(prev => {
             const next = { ...prev };
+            let hasNewKeys = false;
+
+            // Helper to flatten object
+            const flatten = (obj, prefix = '', res = {}) => {
+                for (const key in obj) {
+                    const val = obj[key];
+                    const newKey = prefix ? `${prefix}.${key}` : key;
+                    if (val && typeof val === 'object' && !Array.isArray(val)) {
+                        flatten(val, newKey, res);
+                    } else {
+                        res[newKey] = val;
+                    }
+                }
+                return res;
+            };
+
+            const flatData = flatten(data);
 
             // Identify numeric keys
-            Object.keys(data).forEach(key => {
-                const val = data[key];
+            Object.keys(flatData).forEach(key => {
+                const val = flatData[key];
                 if (typeof val === 'number') {
-                    if (!next[key]) next[key] = [];
+                    if (!next[key]) {
+                        next[key] = [];
+                        hasNewKeys = true;
+                    }
                     next[key] = [...next[key], val].slice(-maxPoints);
                 }
             });
@@ -88,57 +113,77 @@ export default function Charts({ data }) {
         });
     }, [data]);
 
-    // Pick top 4 numeric keys to display
-    const keys = Object.keys(datasets).slice(0, 4);
-    const colors = ['#00f3ff', '#00ff9d', '#ff2a2a', '#ffff00'];
+    // Initialize selected keys if empty
+    useEffect(() => {
+        if (selectedKeys.length === 0 && Object.keys(datasets).length > 0) {
+            setSelectedKeys(Object.keys(datasets).slice(0, 4));
+        }
+    }, [datasets]);
+
+    const toggleKey = (key) => {
+        setSelectedKeys(prev => {
+            if (prev.includes(key)) {
+                return prev.filter(k => k !== key);
+            } else {
+                if (prev.length >= 4) {
+                    // Remove the first one and add the new one to keep max 4
+                    return [...prev.slice(1), key];
+                }
+                return [...prev, key];
+            }
+        });
+    };
+
+    // Premium colors: Cyan, Purple, Green, Orange
+    const colors = ['rgba(0, 242, 255, 1)', 'rgba(189, 0, 255, 1)', 'rgba(0, 255, 157, 1)', 'rgba(255, 184, 0, 1)'];
+
+    const availableKeys = Object.keys(datasets);
 
     return (
-        <div style={{ flex: 3, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '12px' }}>
-            {keys.map((key, i) => (
-                <div key={key} style={{
-                    background: 'rgba(20, 20, 20, 0.6)',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    backdropFilter: 'blur(5px)',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    <div style={{
-                        color: '#888',
-                        fontSize: '0.65rem',
-                        marginBottom: '5px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px',
-                        display: 'flex',
-                        justifyContent: 'space-between'
-                    }}>
+        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Controls */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', padding: '5px' }}>
+                {availableKeys.map(key => (
+                    <button
+                        key={key}
+                        onClick={() => toggleKey(key)}
+                        style={{
+                            background: selectedKeys.includes(key) ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                        }}
+                    >
                         {key}
-                        <span style={{ color: colors[i % colors.length] }}>
-                            {datasets[key][datasets[key].length - 1]?.toFixed(2)}
-                        </span>
+                    </button>
+                ))}
+            </div>
+
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '15px' }}>
+                {selectedKeys.map((key, i) => (
+                    <div key={key} className="widget" style={{ padding: '10px' }}>
+                        <div className="widget-header" style={{ marginBottom: '5px' }}>
+                            {key}
+                            <div style={{ fontSize: '0.7rem', color: colors[i % colors.length] }}>
+                                {datasets[key][datasets[key].length - 1]?.toFixed(2)}
+                            </div>
+                        </div>
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                            <Line options={options} data={createData(colors[i % colors.length], datasets[key])} />
+                        </div>
                     </div>
-                    <div style={{ flex: 1, minHeight: 0 }}>
-                        <Line options={options} data={createData(colors[i % colors.length], datasets[key])} />
+                ))}
+                {selectedKeys.length === 0 && (
+                    <div className="widget" style={{ gridColumn: '1 / -1', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ color: 'var(--text-muted)', letterSpacing: '2px' }}>
+                            SELECT DATA TO VIEW
+                        </div>
                     </div>
-                </div>
-            ))}
-            {keys.length === 0 && (
-                <div style={{
-                    gridColumn: '1 / -1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#444',
-                    border: '1px dashed #333',
-                    borderRadius: '8px',
-                    background: 'rgba(0,0,0,0.2)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem'
-                }}>
-                    WAITING FOR NUMERIC DATA...
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

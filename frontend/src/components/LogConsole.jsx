@@ -8,54 +8,38 @@ export default function LogConsole({ logs }) {
     }, [logs]);
 
     return (
-        <div style={{
-            flex: 1,
-            backgroundColor: 'var(--bg-tertiary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '4px',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            overflow: 'hidden',
-            minWidth: '300px'
-        }}>
-            <div style={{
-                padding: '8px 12px',
-                backgroundColor: 'var(--bg-secondary)',
-                borderBottom: '1px solid var(--border-color)',
-                fontSize: '0.75rem',
-                fontWeight: 'bold',
-                color: 'var(--text-secondary)',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-            }}>
-                System Logs
+        <div className="widget" style={{ flex: 2, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+            <div className="widget-header" style={{ padding: '10px 15px', borderBottom: '1px solid var(--border-color)', margin: 0, background: 'rgba(0,0,0,0.2)' }}>
+                SYSTEM LOGS
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{logs.length} EVENTS</span>
             </div>
             <div style={{
                 flex: 1,
                 overflowY: 'auto',
                 padding: '10px',
-                fontFamily: 'monospace',
-                fontSize: '0.85rem',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.8rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px',
-                backgroundColor: '#000'
+                gap: '4px'
             }}>
-                {logs.length === 0 && <div style={{ color: '#444', fontStyle: 'italic' }}>Waiting for data...</div>}
-                {logs.map((log, i) => {
-                    let color = 'var(--text-secondary)';
-                    if (typeof log === 'string') {
-                        if (log.includes('ERROR')) color = 'var(--danger-color)';
-                        if (log.includes('SUCCESS') || log.includes('Connected')) color = 'var(--success-color)';
-                    }
-                    return (
-                        <div key={i} style={{ color, wordBreak: 'break-all' }}>
-                            <span style={{ color: '#555', marginRight: '8px' }}>[{new Date().toLocaleTimeString()}]</span>
-                            {typeof log === 'object' ? JSON.stringify(log) : log}
-                        </div>
-                    );
-                })}
+                {logs.length === 0 && (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '20px' }}>
+                        NO LOGS AVAILABLE
+                    </div>
+                )}
+                {logs.map((log, i) => (
+                    <div key={i} style={{
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        paddingBottom: '2px',
+                        color: log.includes('ERROR') ? 'var(--danger-color)' : 'var(--text-primary)'
+                    }}>
+                        <span style={{ color: 'var(--text-muted)', marginRight: '10px' }}>
+                            {new Date().toLocaleTimeString()}
+                        </span>
+                        {log}
+                    </div>
+                ))}
                 <div ref={endRef} />
             </div>
         </div>

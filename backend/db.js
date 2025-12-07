@@ -1,63 +1,46 @@
-const sqlite3 = require('sqlite3').verbose();
-const { MongoClient } = require('mongodb');
 const path = require('path');
 const fs = require('fs');
+const { MongoClient } = require('mongodb');
 
-// Ensure local data directory exists
-const dataDir = path.join(__dirname, '../localdata');
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir);
+let dataDir;
+
+// Check if running in Electron
+if (process.versions.electron) {
+    const { app } = require('electron');
+    // If app is not ready yet (which can happen if required early), we might need to wait or use a different approach.
+    // However, usually backend is required after app is ready or we can use app.getPath safely.
+    // Note: In the main process, 'electron' export has 'app'.
+    try {
+        dataDir = path.join(app.getPath('userData'), 'localdata');
+    } catch (e) {
+        // Fallback for when required from a context where app is not available (unlikely in this architecture)
+        dataDir = path.join(__dirname, '../localdata');
+    }
+} else {
+    // Web Server Mode (Node.js)
+    dataDir = path.join(__dirname, '../localdata');
 }
 
-const dbPath = path.join(dataDir, 'localdata.db');
-const localDB = new sqlite3.Database(dbPath);
+// Ensure local data directory exists
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const missionsFile = path.join(dataDir, 'missions.json');
+const eventsFile = path.join(dataDir, 'events.json');
+const telemetryFile = path.join(dataDir, 'telemetry.log');
+
+// Initialize files if they don't exist
+function initDB() {
+    if (!fs.existsSync(missionsFile)) fs.writeFileSync(missionsFile, '[]');
+    if (!fs.existsSync(eventsFile)) fs.writeFileSync(eventsFile, '[]');
+    // telemetry.log is appended to, so no need to init
+}
 
 // MongoDB Configuration (Optional)
 let mongoClient = null;
 let remoteDB = null;
 let useRemote = false;
-
-function initDB() {
-    localDB.serialize(() => {
-        // Telemetry Raw Table
-        localDB.run(`CREATE TABLE IF NOT EXISTS telemetry_raw (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp INTEGER,
-            vehicle_id TEXT,
-            source TEXT,
-            raw_data TEXT
-        )`);
-
-        // Telemetry Parsed Table
-        localDB.run(`CREATE TABLE IF NOT EXISTS telemetry_parsed (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp INTEGER,
-            vehicle_id TEXT,
-            key TEXT,
-            value REAL
-        )`);
-
-        // Missions Table
-        localDB.run(`CREATE TABLE IF NOT EXISTS missions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            start_time INTEGER,
-            end_time INTEGER,
-            vehicle_id TEXT,
-            total_distance REAL,
-            max_alt REAL,
-            min_voltage REAL,
-            gps_trace TEXT
-        )`);
-
-        // Events Table
-        localDB.run(`CREATE TABLE IF NOT EXISTS events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp INTEGER,
-            type TEXT,
-            message TEXT
-        )`);
-    });
-}
 
 async function connectRemote(uri, dbName) {
     try {
@@ -74,66 +57,79 @@ async function connectRemote(uri, dbName) {
 
 function saveTelemetry(vehicleId, source, rawData, parsedData) {
     const timestamp = Date.now();
+    const entry = { timestamp, vehicleId, source, raw: rawData, parsed: parsedData };
 
-    // 1. Save Raw
-    const stmtRaw = localDB.prepare(`INSERT INTO telemetry_raw (timestamp, vehicle_id, source, raw_data) VALUES (?, ?, ?, ?)`);
-    stmtRaw.run(timestamp, vehicleId, source, JSON.stringify(rawData));
-    stmtRaw.finalize();
+    // Append to log file (NDJSON format)
+    fs.appendFile(telemetryFile, JSON.stringify(entry) + '\n', (err) => {
+        if (err) console.error("Failed to write telemetry:", err);
+    });
 
-    // 2. Save Parsed
-    if (parsedData && typeof parsedData === 'object') {
-        const stmtParsed = localDB.prepare(`INSERT INTO telemetry_parsed (timestamp, vehicle_id, key, value) VALUES (?, ?, ?, ?)`);
-        for (const [key, value] of Object.entries(parsedData)) {
-            if (typeof value === 'number') {
-                stmtParsed.run(timestamp, vehicleId, key, value);
-            }
-        }
-        stmtParsed.finalize();
-    }
-
-    // 3. Remote Sync (if enabled)
+    // Remote Sync (if enabled)
     if (useRemote && remoteDB) {
-        remoteDB.collection('telemetry').insertOne({
-            timestamp,
-            vehicleId,
-            source,
-            raw: rawData,
-            parsed: parsedData
-        }).catch(err => console.error("Remote Sync Error:", err));
+        remoteDB.collection('telemetry').insertOne(entry)
+            .catch(err => console.error("Remote Sync Error:", err));
     }
 }
 
 function getMissions(callback) {
-    localDB.all("SELECT * FROM missions ORDER BY start_time DESC", [], (err, rows) => {
-        if (callback) callback(err, rows);
+    fs.readFile(missionsFile, 'utf8', (err, data) => {
+        if (err) {
+            if (callback) callback(err, []);
+            return;
+        }
+        try {
+            const missions = JSON.parse(data);
+            // Sort by start_time DESC
+            missions.sort((a, b) => b.startTime - a.startTime);
+            if (callback) callback(null, missions);
+        } catch (e) {
+            if (callback) callback(e, []);
+        }
     });
 }
 
 function saveMission(missionData) {
-    const stmt = localDB.prepare(`INSERT INTO missions (start_time, end_time, vehicle_id, total_distance, max_alt, min_voltage, gps_trace) VALUES (?, ?, ?, ?, ?, ?, ?)`);
-    stmt.run(
-        missionData.startTime,
-        missionData.endTime,
-        missionData.vehicleId,
-        missionData.totalDistance,
-        missionData.maxAlt,
-        missionData.minVoltage,
-        JSON.stringify(missionData.gpsTrace)
-    );
-    stmt.finalize();
+    fs.readFile(missionsFile, 'utf8', (err, data) => {
+        let missions = [];
+        if (!err) {
+            try {
+                missions = JSON.parse(data);
+            } catch (e) {
+                console.error("Error parsing missions file:", e);
+            }
+        }
+        missions.push(missionData);
+        fs.writeFile(missionsFile, JSON.stringify(missions, null, 2), (err) => {
+            if (err) console.error("Failed to save mission:", err);
+        });
+    });
 }
 
 function logEvent(type, message) {
-    const stmt = localDB.prepare("INSERT INTO events (timestamp, type, message) VALUES (?, ?, ?)");
-    stmt.run(Date.now(), type, message);
-    stmt.finalize();
+    const entry = { timestamp: Date.now(), type, message };
+    fs.readFile(eventsFile, 'utf8', (err, data) => {
+        let events = [];
+        if (!err) {
+            try {
+                events = JSON.parse(data);
+            } catch (e) {
+                // Ignore
+            }
+        }
+        events.push(entry);
+        // Keep only last 1000 events
+        if (events.length > 1000) events = events.slice(-1000);
+
+        fs.writeFile(eventsFile, JSON.stringify(events, null, 2), (err) => {
+            if (err) console.error("Failed to save event:", err);
+        });
+    });
 }
 
 // Initialize on load
 initDB();
 
 module.exports = {
-    localDB,
     connectRemote,
     saveTelemetry,
     getMissions,

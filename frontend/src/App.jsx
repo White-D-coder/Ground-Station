@@ -1,11 +1,75 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import DataSegments from './components/DataSegments';
 import Charts from './components/Charts';
 import Map from './components/Map';
+import CubeSat from './components/CubeSat';
 import LogConsole from './components/LogConsole';
 import './App.css';
+
+// Web API Shim
+const createWebApi = () => {
+  const listeners = { telemetry: [], raw: [] };
+  let ws = null;
+
+  const connectWs = () => {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${window.location.host}/ws`);
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'telemetry') {
+          listeners.telemetry.forEach(cb => cb(msg.data));
+        } else if (msg.type === 'raw') {
+          listeners.raw.forEach(cb => cb(msg.data));
+        }
+      } catch (e) {
+        console.error("WS Parse Error", e);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log("WS Closed, reconnecting...");
+      setTimeout(connectWs, 2000);
+    };
+  };
+
+  connectWs();
+
+  return {
+    serial: {
+      list: async () => {
+        const res = await fetch('/api/ports');
+        return await res.json();
+      },
+      connect: async (port, baud) => {
+        await fetch('/api/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ port, baud })
+        });
+      },
+      disconnect: async () => {
+        await fetch('/api/disconnect', { method: 'POST' });
+      }
+    },
+    on: {
+      telemetry: (cb) => listeners.telemetry.push(cb),
+      raw: (cb) => listeners.raw.push(cb)
+    },
+    mission: {
+      save: async () => console.log("Mission save not implemented in web mode"),
+      list: async () => []
+    },
+    export: {
+      save: async () => alert("Export not supported in web mode yet")
+    },
+    can: { listen: () => { } },
+    lora: { listen: () => { } }
+  };
+};
 
 function App() {
   const [serialData, setSerialData] = useState({});
@@ -15,39 +79,24 @@ function App() {
   const [missionData, setMissionData] = useState([]);
   const [isElectron, setIsElectron] = useState(true);
 
-  useEffect(() => {
-    if (!window.api) {
-      setIsElectron(false);
-    }
-  }, []);
+  const [isReady, setIsReady] = useState(false);
 
-  if (!isElectron) {
-    return (
-      <div style={{
-        height: '100vh',
-        width: '100vw',
-        backgroundColor: '#222', // Dark grey instead of black
-        color: 'red',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        padding: '20px'
-      }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>⚠️ STOP ⚠️</h1>
-        <h2 style={{ color: 'white' }}>You are running in a BROWSER.</h2>
-        <p style={{ color: '#ccc', fontSize: '1.2rem', maxWidth: '600px', margin: '20px 0' }}>
-          The Serial Port connection <b>CANNOT</b> work in a web browser.<br />
-          You must run this app as a desktop application.
-        </p>
-        <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '8px', border: '1px solid #444' }}>
-          <p style={{ color: '#fff', marginBottom: '10px' }}>Please run this command in your terminal:</p>
-          <code style={{ color: '#0f0', fontSize: '1.5rem', fontFamily: 'monospace' }}>npm start</code>
-        </div>
-      </div>
-    );
-  }
+  // Ref to hold the API instance (Electron or Web)
+  const apiRef = useRef(null);
+
+  useEffect(() => {
+    if (window.api) {
+      setIsElectron(true);
+      apiRef.current = window.api;
+    } else {
+      setIsElectron(false);
+      console.log("Running in WEB MODE");
+      apiRef.current = createWebApi();
+      // Inject into window for child components if they rely on it (though they should use props)
+      window.api = apiRef.current;
+    }
+    setIsReady(true);
+  }, []);
 
   const startRecording = () => {
     setIsRecording(true);
@@ -56,8 +105,8 @@ function App() {
 
   const stopRecording = async () => {
     setIsRecording(false);
-    if (window.api && missionData.length > 0) {
-      await window.api.mission.save({
+    if (apiRef.current && missionData.length > 0) {
+      await apiRef.current.mission.save({
         startTime: missionData[0].timestamp,
         endTime: missionData[missionData.length - 1].timestamp,
         vehicleId: 'V1',
@@ -69,71 +118,41 @@ function App() {
     }
   };
 
-  // Utility to flatten nested objects for CSV/Excel
-  const flattenData = (data) => {
-    const result = {};
-    const recurse = (cur, prop) => {
-      if (Object(cur) !== cur) {
-        result[prop] = cur;
-      } else if (Array.isArray(cur)) {
-        for (let i = 0, l = cur.length; i < l; i++)
-          recurse(cur[i], prop ? prop + "." + i : "" + i);
-        if (cur.length == 0)
-          result[prop] = [];
-      } else {
-        let isEmpty = true;
-        for (const p in cur) {
-          isEmpty = false;
-          recurse(cur[p], prop ? prop + "." + p : p);
-        }
-        if (isEmpty && prop)
-          result[prop] = {};
-      }
-    }
-    recurse(data, "");
-    return result;
-  };
-
   const exportData = async (type) => {
-    if (window.api && missionData.length > 0) {
-      // Flatten data for CSV/XLSX if needed
-      let dataToExport = missionData;
-      if (type === 'csv' || type === 'xlsx') {
-        dataToExport = missionData.map(d => flattenData(d));
-      }
-
-      await window.api.export.save(type, dataToExport);
+    if (apiRef.current && missionData.length > 0) {
+      await apiRef.current.export.save(type, missionData);
     }
   };
 
   useEffect(() => {
-    // Listen for data
-    if (window.api) {
-      const cleanupTelemetry = window.api.on.telemetry((eventData) => {
-        console.log("App received telemetry:", eventData); // DEBUG LOG
-        const d = eventData.data;
-        setSerialData(d);
+    // Wait for API to be initialized
+    if (!apiRef.current) return;
 
-        if (isRecording) {
-          setMissionData(prev => [...prev, { ...d, timestamp: Date.now() }]);
-        }
-      });
+    const cleanupTelemetry = apiRef.current.on.telemetry((eventData) => {
+      console.log("App received telemetry:", eventData);
+      const d = eventData.data || eventData; // Handle different structures if any
+      setSerialData(d);
 
-      const cleanupRaw = window.api.on.raw((data) => {
-        // console.log("App received raw:", data); // DEBUG LOG
-        setLogs(prev => [...prev.slice(-99), data]); // Keep last 100 logs
-      });
+      if (isRecording) {
+        setMissionData(prev => [...prev, { ...d, timestamp: Date.now() }]);
+      }
+    });
 
-      // Cleanup listeners on unmount or re-run
-      return () => {
-        // Note: electron-preload needs to support removing listeners if we want true cleanup,
-        // but for now, we just want to verify data flow. 
-        // Since our preload exposes 'on' which calls ipcRenderer.on, we can't easily remove specific listeners 
-        // unless we expose removeListener. 
-        // However, the issue might be that we are NOT receiving data.
-      };
-    }
-  }, [isRecording]);
+    const cleanupRaw = apiRef.current.on.raw((data) => {
+      console.log("App received raw:", data);
+      setLogs(prev => [...prev.slice(-99), data]);
+    });
+
+    return () => {
+      // Cleanup if possible
+    };
+  }, [isRecording, isElectron]); // Re-run when mode changes or recording starts
+
+  // Force re-render when API is ready
+  if (!isReady) {
+    // Small delay to let useEffect run
+    return <div style={{ color: 'white' }}>Initializing...</div>;
+  }
 
   return (
     <div className="app-container">
@@ -150,6 +169,7 @@ function App() {
         <div className="dashboard-grid">
           <div className="top-row">
             <DataSegments data={serialData} />
+            <CubeSat data={serialData} />
             <Map lat={serialData.gps?.lat || serialData.lat} lon={serialData.gps?.lon || serialData.lon} />
           </div>
           <div className="bottom-row">

@@ -81,149 +81,126 @@ export default function Sidebar(props) {
     };
 
     return (
-        <div style={{
-            width: '280px',
-            height: '100%',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '25px',
-            overflowY: 'auto',
-            fontFamily: 'var(--font-ui)'
-        }}>
+        <div className="sidebar">
             <div className="panel-section">
-                <h3 style={{
-                    marginTop: 0,
-                    color: 'var(--accent-color)',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '2px',
-                    marginBottom: '15px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                }}>
-                    <div style={{ width: '4px', height: '12px', background: 'var(--accent-color)' }}></div>
-                    Serial Connection
-                </h3>
-
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                    <select
-                        style={{ flex: 1 }}
-                        value={selectedPort}
-                        onChange={(e) => setSelectedPort(e.target.value)}
-                        disabled={isConnected}
-                    >
-                        {ports.length === 0 && <option>No Ports Found</option>}
-                        {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
-                    </select>
-                    <button
-                        onClick={refreshPorts}
-                        disabled={isConnected}
-                        style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            color: 'var(--accent-color)',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            cursor: isConnected ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        <RefreshCw size={16} />
-                    </button>
+                <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><Settings size={14} style={{ marginRight: '8px' }} /> CONNECTION</span>
+                    <div style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: isConnected ? 'var(--success-color)' : 'var(--danger-color)',
+                        boxShadow: `0 0 8px ${isConnected ? 'var(--success-color)' : 'var(--danger-color)'}`
+                    }} />
                 </div>
 
-                <select
-                    style={{ width: '100%', marginBottom: '20px' }}
-                    value={baudRate}
-                    onChange={(e) => setBaudRate(e.target.value)}
-                    disabled={isConnected}
-                >
-                    <option value="9600">9600</option>
-                    <option value="57600">57600</option>
-                    <option value="115200">115200</option>
-                </select>
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>PORT</label>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                        <select
+                            style={{
+                                flex: 1,
+                                background: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                color: 'white',
+                                padding: '6px',
+                                borderRadius: '4px',
+                                outline: 'none'
+                            }}
+                            value={selectedPort}
+                            onChange={(e) => setSelectedPort(e.target.value)}
+                            disabled={isConnected}
+                        >
+                            {ports.length === 0 && <option>No Ports Found</option>}
+                            {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
+                        </select>
+                        <button
+                            onClick={refreshPorts}
+                            disabled={isConnected}
+                            className="btn-icon"
+                            title="Refresh Ports"
+                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        >
+                            <RefreshCw size={16} />
+                        </button>
+                    </div>
 
-                {!isConnected ? (
-                    <button
-                        onClick={handleConnect}
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>BAUD RATE</label>
+                    <select
                         style={{
                             width: '100%',
-                            padding: '12px',
-                            backgroundColor: 'rgba(0, 243, 255, 0.1)',
-                            color: 'var(--accent-color)',
-                            fontWeight: '600',
+                            marginBottom: '15px',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'white',
+                            padding: '6px',
                             borderRadius: '4px',
-                            border: '1px solid var(--accent-color)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            boxShadow: 'var(--accent-glow)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px'
+                            outline: 'none'
                         }}
+                        value={baudRate}
+                        onChange={(e) => setBaudRate(e.target.value)}
+                        disabled={isConnected}
                     >
-                        <Link size={16} /> CONNECT
-                    </button>
-                ) : (
-                    <button
-                        onClick={handleDisconnect}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            backgroundColor: 'rgba(255, 42, 42, 0.1)',
-                            color: 'var(--danger-color)',
-                            fontWeight: '600',
-                            borderRadius: '4px',
-                            border: '1px solid var(--danger-color)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            boxShadow: 'var(--danger-glow)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px'
-                        }}
-                    >
-                        <Link2Off size={16} /> DISCONNECT
-                    </button>
-                )}
+                        <option value="9600">9600</option>
+                        <option value="57600">57600</option>
+                        <option value="115200">115200</option>
+                    </select>
+
+                    {!isConnected ? (
+                        <button
+                            onClick={handleConnect}
+                            className="btn-primary"
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                background: 'linear-gradient(90deg, var(--primary-color), #00aaff)',
+                                border: 'none',
+                                padding: '10px',
+                                fontWeight: 'bold',
+                                letterSpacing: '1px'
+                            }}
+                        >
+                            <Link size={16} /> CONNECT
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleDisconnect}
+                            className="btn-danger"
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                background: 'rgba(255, 50, 50, 0.2)',
+                                border: '1px solid var(--danger-color)',
+                                color: 'var(--danger-color)'
+                            }}
+                        >
+                            <Link2Off size={16} /> DISCONNECT
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="panel-section">
-                <h3 style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '2px',
-                    marginBottom: '15px',
-                    borderTop: '1px solid rgba(255,255,255,0.1)',
-                    paddingTop: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                }}>
-                    <div style={{ width: '4px', height: '12px', background: '#666' }}></div>
+                <div className="panel-header">
                     Mission Control
-                </h3>
+                </div>
                 {!isRecording ? (
                     <button
                         onClick={startRecording}
+                        className="btn-primary"
                         style={{
                             width: '100%',
-                            padding: '12px',
-                            backgroundColor: 'rgba(0, 255, 157, 0.1)',
-                            color: 'var(--success-color)',
+                            marginBottom: '10px',
+                            background: 'transparent',
                             border: '1px solid var(--success-color)',
-                            borderRadius: '4px',
-                            fontWeight: '600',
-                            marginBottom: '15px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px',
-                            boxShadow: 'var(--success-glow)'
+                            color: 'var(--success-color)',
+                            boxShadow: 'none'
                         }}
                     >
                         START RECORDING
@@ -231,66 +208,41 @@ export default function Sidebar(props) {
                 ) : (
                     <button
                         onClick={stopRecording}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            backgroundColor: 'rgba(255, 42, 42, 0.1)',
-                            color: 'var(--danger-color)',
-                            border: '1px solid var(--danger-color)',
-                            borderRadius: '4px',
-                            fontWeight: '600',
-                            marginBottom: '15px',
-                            animation: 'pulse 2s infinite',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px',
-                            boxShadow: 'var(--danger-glow)'
-                        }}
+                        className="btn-danger pulse-animation"
+                        style={{ width: '100%', marginBottom: '10px' }}
                     >
                         STOP RECORDING
                     </button>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <button onClick={() => exportData('json')} style={exportBtnStyle}>JSON</button>
-                    <button onClick={() => exportData('csv')} style={exportBtnStyle}>CSV</button>
-                    <button onClick={() => exportData('xlsx')} style={exportBtnStyle}>XLSX</button>
-                    <button onClick={() => exportData('kml')} style={exportBtnStyle}>KML</button>
+                    <button onClick={() => exportData('json')} className="btn-icon">JSON</button>
+                    <button onClick={() => exportData('csv')} className="btn-icon">CSV</button>
+                    <button onClick={() => exportData('xlsx')} className="btn-icon">XLSX</button>
+                    <button onClick={() => exportData('kml')} className="btn-icon">KML</button>
                 </div>
             </div>
 
             <div className="panel-section">
-                <h3 style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '2px',
-                    marginBottom: '15px',
-                    borderTop: '1px solid rgba(255,255,255,0.1)',
-                    paddingTop: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                }}>
-                    <div style={{ width: '4px', height: '12px', background: '#666' }}></div>
+                <div className="panel-header">
                     Advanced
-                </h3>
+                </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ fontSize: '0.7rem', color: '#666', marginBottom: '4px', display: 'block' }}>CAN INTERFACE</label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ marginBottom: '12px' }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>CAN Interface</label>
+                    <div style={{ display: 'flex', gap: '5px' }}>
                         <input
                             value={canIface}
                             onChange={(e) => setCanIface(e.target.value)}
                             style={{ flex: 1, width: '100%' }}
                         />
-                        <button onClick={handleCanListen} style={secondaryBtnStyle}>GO</button>
+                        <button onClick={handleCanListen} className="btn-icon">GO</button>
                     </div>
                 </div>
 
                 <div>
-                    <label style={{ fontSize: '0.7rem', color: '#666', marginBottom: '4px', display: 'block' }}>LORA PORT</label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>LoRa Port</label>
+                    <div style={{ display: 'flex', gap: '5px' }}>
                         <select
                             value={loraPort}
                             onChange={(e) => setLoraPort(e.target.value)}
@@ -299,38 +251,19 @@ export default function Sidebar(props) {
                             <option value="">Select Port</option>
                             {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
                         </select>
-                        <button onClick={handleLoraListen} style={secondaryBtnStyle}>GO</button>
+                        <button onClick={handleLoraListen} className="btn-icon">GO</button>
                     </div>
                 </div>
             </div>
 
-            <div className="panel-section" style={{ marginTop: 'auto' }}>
-                <div style={{ fontSize: '0.7rem', color: '#444', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                    v1.3.0 PRO<br />
-                    <span style={{ color: '#333' }}>{debugMsg}</span>
+            <div className="panel-section" style={{ marginTop: 'auto', border: 'none', background: 'transparent', padding: 0 }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>GROUND STATION PRO</div>
+                    v1.2.0<br />
+                    <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>{debugMsg}</span>
                 </div>
             </div>
         </div>
     );
 }
 
-const exportBtnStyle = {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    color: 'var(--text-secondary)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    padding: '8px',
-    borderRadius: '4px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    transition: 'all 0.2s'
-};
-
-const secondaryBtnStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    color: 'var(--text-primary)',
-    padding: '0 12px',
-    borderRadius: '4px',
-    border: '1px solid rgba(255,255,255,0.1)',
-    fontSize: '0.75rem',
-    fontWeight: '600'
-};
