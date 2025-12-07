@@ -12,11 +12,9 @@ const wss = new WebSocket.Server({ server });
 app.use(cors());
 app.use(express.json());
 
-// Serve Frontend
 const distPath = path.join(__dirname, 'frontend/dist');
 app.use(express.static(distPath));
 
-// API Endpoints to mimic Electron IPC
 app.get('/api/ports', async (req, res) => {
     try {
         const ports = await backend.serial.listPorts();
@@ -45,16 +43,12 @@ app.post('/api/disconnect', (req, res) => {
     }
 });
 
-// WebSocket for Real-time Data
 wss.on('connection', (ws) => {
     console.log('Client connected');
-
-    // Send initial state if needed
 
     ws.on('close', () => console.log('Client disconnected'));
 });
 
-// Bridge Backend Events to WebSocket
 backend.serial.on('telemetry', (data) => {
     broadcast({ type: 'telemetry', data });
 });
@@ -71,13 +65,12 @@ function broadcast(msg) {
     });
 }
 
-// Fallback for SPA
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`
     🚀 Ground Station Web Server Running!
     

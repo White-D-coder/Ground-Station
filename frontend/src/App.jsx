@@ -8,7 +8,6 @@ import CubeSat from './components/CubeSat';
 import LogConsole from './components/LogConsole';
 import './App.css';
 
-// Web API Shim
 const createWebApi = () => {
   const listeners = { telemetry: [], raw: [] };
   let ws = null;
@@ -81,7 +80,6 @@ function App() {
 
   const [isReady, setIsReady] = useState(false);
 
-  // Ref to hold the API instance (Electron or Web)
   const apiRef = useRef(null);
 
   useEffect(() => {
@@ -92,7 +90,6 @@ function App() {
       setIsElectron(false);
       console.log("Running in WEB MODE");
       apiRef.current = createWebApi();
-      // Inject into window for child components if they rely on it (though they should use props)
       window.api = apiRef.current;
     }
     setIsReady(true);
@@ -125,12 +122,11 @@ function App() {
   };
 
   useEffect(() => {
-    // Wait for API to be initialized
     if (!apiRef.current) return;
 
     const cleanupTelemetry = apiRef.current.on.telemetry((eventData) => {
       console.log("App received telemetry:", eventData);
-      const d = eventData.data || eventData; // Handle different structures if any
+      const d = eventData.data || eventData;
       setSerialData(d);
 
       if (isRecording) {
@@ -144,13 +140,10 @@ function App() {
     });
 
     return () => {
-      // Cleanup if possible
     };
-  }, [isRecording, isElectron]); // Re-run when mode changes or recording starts
+  }, [isRecording, isElectron]);
 
-  // Force re-render when API is ready
   if (!isReady) {
-    // Small delay to let useEffect run
     return <div style={{ color: 'white' }}>Initializing...</div>;
   }
 

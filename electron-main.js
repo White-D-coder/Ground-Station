@@ -5,14 +5,13 @@ const fs = require('fs');
 const xlsx = require('xlsx');
 const xmlbuilder = require('xmlbuilder');
 
-// Web Server Dependencies
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const cors = require('cors');
 
 let mainWindow;
-let server; // HTTP Server instance
+let server;
 
 function startWebServer() {
     const expressApp = express();
@@ -22,13 +21,9 @@ function startWebServer() {
     expressApp.use(cors());
     expressApp.use(express.json());
 
-    // Serve Frontend (Production Path)
-    // In production, resources are in app.asar
-    // We need to serve from where the files actually are
     let distPath;
     if (app.isPackaged) {
         distPath = path.join(process.resourcesPath, 'app/frontend/dist');
-        // Fallback if not found (sometimes structure varies)
         if (!fs.existsSync(distPath)) {
             distPath = path.join(__dirname, 'frontend/dist');
         }
@@ -38,7 +33,6 @@ function startWebServer() {
 
     expressApp.use(express.static(distPath));
 
-    // API Endpoints
     expressApp.get('/api/ports', async (req, res) => {
         try {
             const ports = await backend.serial.listPorts();
@@ -67,7 +61,6 @@ function startWebServer() {
         }
     });
 
-    // WebSocket Broadcast
     function broadcast(msg) {
         wss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
@@ -76,11 +69,9 @@ function startWebServer() {
         });
     }
 
-    // Bridge Events
     backend.serial.on('telemetry', (data) => broadcast({ type: 'telemetry', data }));
     backend.serial.on('raw', (data) => broadcast({ type: 'raw', data }));
 
-    // Fallback for SPA
     expressApp.get(/(.*)/, (req, res) => {
         res.sendFile(path.join(distPath, 'index.html'));
     });
@@ -89,9 +80,6 @@ function startWebServer() {
     server.on('error', (e) => {
         if (e.code === 'EADDRINUSE') {
             console.error(`[Main] Port ${PORT} is already in use. Is another instance running?`);
-            // Optional: You could choose to not crash here, or try another port.
-            // For now, we log it so it doesn't show a scary dialog if handled upstream, 
-            // but since it's the main process, we might want to let it fail or notify the user.
         } else {
             console.error('[Main] Server error:', e);
         }
@@ -120,7 +108,7 @@ function createWindow() {
         mainWindow.webContents.openDevTools();
     } else {
         mainWindow.loadFile(path.join(__dirname, 'frontend/dist/index.html'));
-        mainWindow.webContents.openDevTools(); // Uncomment to debug production
+        mainWindow.webContents.openDevTools();
     }
 }
 
@@ -142,8 +130,6 @@ app.on('before-quit', () => {
         server.close();
     }
 });
-
-// --- IPC Handlers ---
 
 ipcMain.handle('serial:list', async () => {
     console.log('[Main] Requesting serial port list...');
@@ -202,7 +188,6 @@ ipcMain.handle('export:save', async (event, { type, data }) => {
             fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
         } else if (type === 'csv') {
             if (data.length > 0) {
-                // Helper to flatten object
                 const flatten = (obj, prefix = '', res = {}) => {
                     for (const key in obj) {
                         const val = obj[key];
@@ -251,8 +236,6 @@ ipcMain.handle('export:save', async (event, { type, data }) => {
         return false;
     }
 });
-
-// --- Real-time Emitters ---
 
 backend.serial.on('telemetry', (data) => {
     try {
