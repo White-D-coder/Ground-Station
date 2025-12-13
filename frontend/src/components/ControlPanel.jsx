@@ -229,7 +229,7 @@ export default function ControlPanel({ onBack, data = {}, gpsPath = [], isConnec
 
             <div style={{ flex: 1, display: 'grid', gridTemplateRows: '1.5fr 1fr', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
 
-                <div style={{ gridColumn: 'span 3', background: 'black', borderRadius: '12px', overflow: 'hidden', position: 'relative', border: '1px solid #222' }}>
+                <div style={{ gridColumn: 'span 3', background: 'black', borderRadius: '12px', overflow: 'hidden', position: 'relative', border: '1px solid #222', minWidth: 0, minHeight: 0 }}>
                     {error && (
                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'var(--danger-color)' }}>
                             {error}
@@ -239,7 +239,7 @@ export default function ControlPanel({ onBack, data = {}, gpsPath = [], isConnec
                         ref={videoRef}
                         autoPlay
                         playsInline
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     <div style={{ position: 'absolute', top: '20px', left: '20px', color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem' }}>
                         <div>ISO <span style={{ fontWeight: 'bold' }}>{data.iso || 600}</span></div>
@@ -256,7 +256,7 @@ export default function ControlPanel({ onBack, data = {}, gpsPath = [], isConnec
                     </div>
                 </div>
 
-                <div style={{ background: '#111', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', border: '1px solid #222' }}>
+                <div style={{ background: '#111', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', border: '1px solid #222', minWidth: 0, minHeight: 0 }}>
                     <div>
                         <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Battery Status</div>
                         <div style={{ fontSize: '1.5rem', color: batteryPercent > 20 ? '#4caf50' : 'var(--danger-color)', fontWeight: 'bold' }}>
@@ -276,7 +276,7 @@ export default function ControlPanel({ onBack, data = {}, gpsPath = [], isConnec
                             ))}
                         </div>
                     </div>
-                    <div style={{ flex: 1, minHeight: '100px', position: 'relative' }}>
+                    <div style={{ flex: 1, minHeight: '100px', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>Compass</div>
                         <Compass2D heading={gpsBearing || data.orientation || 0} />
                     </div>
