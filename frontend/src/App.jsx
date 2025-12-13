@@ -70,6 +70,10 @@ const createWebApi = () => {
   };
 };
 
+import History from './components/History';
+import TrackVisualizer from './components/TrackVisualizer';
+import ControlPanel from './components/ControlPanel';
+
 function App() {
   const [serialData, setSerialData] = useState({});
   const [logs, setLogs] = useState([]);
@@ -77,6 +81,8 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [missionData, setMissionData] = useState([]);
   const [isElectron, setIsElectron] = useState(true);
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'history' | 'track' | 'control'
+  const [gpsPath, setGpsPath] = useState([]);
 
   const [isReady, setIsReady] = useState(false);
 
@@ -129,6 +135,13 @@ function App() {
       const d = eventData.data || eventData;
       setSerialData(d);
 
+      // Track GPS Path
+      if (d.gps && d.gps.lat !== 0 && d.gps.lon !== 0) {
+        setGpsPath(prev => [...prev, { lat: d.gps.lat, lon: d.gps.lon }]);
+      } else if (d.lat && d.lon && d.lat !== 0 && d.lon !== 0) {
+        setGpsPath(prev => [...prev, { lat: d.lat, lon: d.lon }]);
+      }
+
       if (isRecording) {
         setMissionData(prev => [...prev, { ...d, timestamp: Date.now() }]);
       }
@@ -158,18 +171,37 @@ function App() {
           startRecording={startRecording}
           stopRecording={stopRecording}
           exportData={exportData}
+          setView={setCurrentView}
+          currentView={currentView}
         />
-        <div className="dashboard-grid">
-          <div className="top-row">
-            <DataSegments data={serialData} />
-            <CubeSat data={serialData} />
-            <Map lat={serialData.gps?.lat || serialData.lat} lon={serialData.gps?.lon || serialData.lon} />
+        {currentView === 'dashboard' ? (
+          <div className="dashboard-grid">
+            <div className="top-row">
+              <DataSegments data={serialData} />
+              <CubeSat data={serialData} />
+              <Map lat={serialData.gps?.lat || serialData.lat} lon={serialData.gps?.lon || serialData.lon} />
+            </div>
+            <div className="bottom-row">
+              <Charts data={serialData} />
+              <LogConsole logs={logs} />
+            </div>
           </div>
-          <div className="bottom-row">
-            <Charts data={serialData} />
-            <LogConsole logs={logs} />
-          </div>
-        </div>
+        ) : currentView === 'history' ? (
+          <History onBack={() => setCurrentView('dashboard')} />
+        ) : currentView === 'track' ? (
+          <TrackVisualizer
+            path={gpsPath}
+            currentPos={gpsPath.length > 0 ? gpsPath[gpsPath.length - 1] : null}
+            onBack={() => setCurrentView('dashboard')}
+          />
+        ) : (
+          <ControlPanel
+            onBack={() => setCurrentView('dashboard')}
+            data={serialData}
+            gpsPath={gpsPath}
+            isConnected={isConnected}
+          />
+        )}
       </div>
     </div>
   );

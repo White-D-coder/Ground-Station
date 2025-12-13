@@ -90,6 +90,8 @@ body {
   backdrop-filter: blur(10px);
   z-index: 10;
   box-shadow: var(--shadow-md);
+  flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .panel-section {
@@ -202,6 +204,7 @@ button {
   gap: 15px;
   padding: 20px;
   overflow: hidden;
+  width: 100%;
 }
 
 .top-row {

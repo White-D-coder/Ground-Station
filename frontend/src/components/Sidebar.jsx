@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Link, Link2Off, Settings } from 'lucide-react';
+import { RefreshCw, Link, Link2Off, Settings, History, Map, Gamepad } from 'lucide-react';
 
 export default function Sidebar(props) {
-    const { setIsConnected, isConnected } = props;
+    const { setIsConnected, isConnected, setView, currentView } = props;
     const [ports, setPorts] = useState([]);
     const [selectedPort, setSelectedPort] = useState('');
     const selectedPortRef = React.useRef(selectedPort);
@@ -55,6 +55,17 @@ export default function Sidebar(props) {
             try {
                 await window.api.serial.connect(selectedPort, parseInt(baudRate));
                 setIsConnected(true);
+
+                // Add to history
+                const historyItem = {
+                    port: selectedPort,
+                    startTime: Date.now(),
+                    endTime: null,
+                    duration: null
+                };
+                const existingHistory = JSON.parse(localStorage.getItem('port_history') || '[]');
+                localStorage.setItem('port_history', JSON.stringify([...existingHistory, historyItem]));
+
             } catch (err) {
                 console.error(err);
             }
@@ -65,6 +76,17 @@ export default function Sidebar(props) {
         if (window.api) {
             await window.api.serial.disconnect();
             setIsConnected(false);
+
+            // Update history
+            const existingHistory = JSON.parse(localStorage.getItem('port_history') || '[]');
+            if (existingHistory.length > 0) {
+                const lastItem = existingHistory[existingHistory.length - 1];
+                if (!lastItem.endTime) {
+                    lastItem.endTime = Date.now();
+                    lastItem.duration = lastItem.endTime - lastItem.startTime;
+                    localStorage.setItem('port_history', JSON.stringify(existingHistory));
+                }
+            }
         }
     };
 
@@ -221,6 +243,57 @@ export default function Sidebar(props) {
                     <button onClick={() => exportData('xlsx')} className="btn-icon">XLSX</button>
                     <button onClick={() => exportData('kml')} className="btn-icon">KML</button>
                 </div>
+
+                <button
+                    onClick={() => setView('history')}
+                    className="btn-primary"
+                    style={{
+                        width: '100%',
+                        marginTop: '15px',
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    <History size={16} /> VIEW HISTORY
+                </button>
+
+                <button
+                    onClick={() => setView('track')}
+                    className="btn-primary"
+                    style={{
+                        width: '100%',
+                        marginTop: '10px',
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    <Map size={16} /> TRACK VISUALIZER
+                </button>
+
+                <button
+                    onClick={() => setView('control')}
+                    className="btn-primary"
+                    style={{
+                        width: '100%',
+                        marginTop: '10px',
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    <Gamepad size={16} /> CONTROL SYSTEM
+                </button>
             </div>
 
             <div className="panel-section">

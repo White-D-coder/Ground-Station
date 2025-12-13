@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
         list: () => ipcRenderer.invoke('serial:list'),
         connect: (port, baud) => ipcRenderer.invoke('serial:connect', port, baud),
         disconnect: () => ipcRenderer.invoke('serial:disconnect'),
+        write: (data) => ipcRenderer.invoke('serial:write', data),
     },
     can: {
         listen: (iface) => ipcRenderer.invoke('can:listen', iface)

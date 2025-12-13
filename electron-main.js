@@ -153,6 +153,11 @@ ipcMain.handle('serial:disconnect', () => {
     return true;
 });
 
+ipcMain.handle('serial:write', (event, data) => {
+    backend.serial.write(data);
+    return true;
+});
+
 ipcMain.handle('can:listen', (event, iface) => {
     backend.can.listen(iface);
     return true;

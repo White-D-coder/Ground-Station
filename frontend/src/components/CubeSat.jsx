@@ -117,7 +117,7 @@ function Satellite({ rotation }) {
     );
 }
 
-export default function CubeSat({ data }) {
+export default function CubeSat({ data, style = {} }) {
     const rotation = {
         x: data.gyro?.x || 0,
         y: data.gyro?.y || 0,
@@ -125,7 +125,7 @@ export default function CubeSat({ data }) {
     };
 
     return (
-        <div style={{ width: '100%', height: '100%', minHeight: '300px', background: '#050510', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ width: '100%', height: '100%', minHeight: '300px', background: '#050510', borderRadius: '8px', overflow: 'hidden', position: 'relative', ...style }}>
             <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10, color: '#00f2ff', fontSize: '0.8rem', fontFamily: 'monospace' }}>
                 ROTATION<br />
                 X: {rotation.x.toFixed(2)}°<br />

@@ -14,11 +14,13 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "chart.js": "^4.5.1",
+    "chartjs-plugin-zoom": "^2.2.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.555.0",
     "react": "^19.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.0",
+    "react-joystick-component": "^6.2.1",
     "react-leaflet": "^5.0.0",
     "three": "^0.181.2"
   },
