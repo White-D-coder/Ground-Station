@@ -61,18 +61,26 @@ const createWebApi = () => {
   return {
     serial: {
       list: async () => {
-        const res = await fetch(apiUrl('/api/ports'));
+        const res = await fetch(apiUrl('/api/ports'), {
+          headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
         return await res.json();
       },
       connect: async (port, baud) => {
         await fetch(apiUrl('/api/connect'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
           body: JSON.stringify({ port, baud })
         });
       },
       disconnect: async () => {
-        await fetch(apiUrl('/api/disconnect'), { method: 'POST' });
+        await fetch(apiUrl('/api/disconnect'), {
+          method: 'POST',
+          headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
       }
     },
     on: {
