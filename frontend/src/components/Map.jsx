@@ -79,7 +79,7 @@ export default function Map({ lat, lon }) {
             <MapContainer center={center} zoom={15} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
                     attribution='&copy; Google Maps'
-                    url="http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
+                    url="https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
                 />
                 {hasGPS && (
                     <Marker position={position}>
