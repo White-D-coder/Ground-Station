@@ -7,9 +7,32 @@ const backend = require('./backend/server');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server, path: '/ws' }); // Explicit path match
 
-app.use(cors());
+// Simulation Mode for Debugging
+if (process.env.SIMULATE) {
+    console.log("⚠️ SIMULATION MODE ACTIVE: Generating fake telemetry");
+    setInterval(() => {
+        const fakeData = {
+            gps: { lat: 28.6139 + (Math.random() * 0.001), lon: 77.2090 + (Math.random() * 0.001), alt: 100 + Math.random() * 10 },
+            battery: 12 + Math.random(),
+            temp: 30 + Math.random() * 5,
+            timestamp: Date.now()
+        };
+        // Broadcast fake data
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ type: 'telemetry', data: fakeData }));
+            }
+        });
+    }, 1000);
+}
+
+app.use(cors({
+    origin: '*', // Allow all origins (Vercel, Localhost, etc.)
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning']
+}));
 app.use(express.json());
 
 const distPath = path.join(__dirname, 'frontend/dist');

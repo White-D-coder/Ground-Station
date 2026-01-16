@@ -20,19 +20,25 @@ const createWebApi = () => {
   const connectWs = () => {
     let wsUrl;
     if (API_BASE) {
-      // If API_BASE is "https://example.com", WS should be "wss://example.com/ws"
-      // If API_BASE is "http://example.com", WS should be "ws://example.com/ws"
       const isSecure = API_BASE.startsWith('https');
       const host = API_BASE.replace(/^https?:\/\//, '');
-      wsUrl = `${isSecure ? 'wss' : 'ws'}://${host}/ws`;
+      // Add query param to try and bypass Ngrok warning for WS
+      wsUrl = `${isSecure ? 'wss' : 'ws'}://${host}/ws?ngrok-skip-browser-warning=true`;
     } else {
-      // Default local behavior
       const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       wsUrl = `${proto}//${window.location.host}/ws`;
     }
 
     console.log("Connecting to WS:", wsUrl);
     ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket Connected!");
+    };
+
+    ws.onerror = (err) => {
+      console.error("❌ WebSocket Error:", err);
+    };
 
     ws.onmessage = (event) => {
       try {
