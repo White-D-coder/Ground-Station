@@ -12,9 +12,27 @@ const createWebApi = () => {
   const listeners = { telemetry: [], raw: [] };
   let ws = null;
 
+  // Configuration for Hybrid Deployment
+  // If VITE_API_URL is set (e.g. "https://my-ngrok.app"), use it.
+  // Otherwise, use relative paths (proxy handles it in dev).
+  const API_BASE = import.meta.env.VITE_API_URL || '';
+
   const connectWs = () => {
-    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${proto}//${window.location.host}/ws`);
+    let wsUrl;
+    if (API_BASE) {
+      // If API_BASE is "https://example.com", WS should be "wss://example.com/ws"
+      // If API_BASE is "http://example.com", WS should be "ws://example.com/ws"
+      const isSecure = API_BASE.startsWith('https');
+      const host = API_BASE.replace(/^https?:\/\//, '');
+      wsUrl = `${isSecure ? 'wss' : 'ws'}://${host}/ws`;
+    } else {
+      // Default local behavior
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${proto}//${window.location.host}/ws`;
+    }
+
+    console.log("Connecting to WS:", wsUrl);
+    ws = new WebSocket(wsUrl);
 
     ws.onmessage = (event) => {
       try {
@@ -37,21 +55,24 @@ const createWebApi = () => {
 
   connectWs();
 
+  // Helper to build full API URL
+  const apiUrl = (endpoint) => `${API_BASE}${endpoint}`;
+
   return {
     serial: {
       list: async () => {
-        const res = await fetch('/api/ports');
+        const res = await fetch(apiUrl('/api/ports'));
         return await res.json();
       },
       connect: async (port, baud) => {
-        await fetch('/api/connect', {
+        await fetch(apiUrl('/api/connect'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ port, baud })
         });
       },
       disconnect: async () => {
-        await fetch('/api/disconnect', { method: 'POST' });
+        await fetch(apiUrl('/api/disconnect'), { method: 'POST' });
       }
     },
     on: {

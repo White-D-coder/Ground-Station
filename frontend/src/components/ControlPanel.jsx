@@ -18,13 +18,21 @@ export default function ControlPanel({ onBack, data = {}, gpsPath = [], isConnec
     const [localOrientation, setLocalOrientation] = useState({ x: 0, y: 0, z: 0 });
 
     useEffect(() => {
-        navigator.mediaDevices.enumerateDevices().then(devices => {
-            const videoInputs = devices.filter(d => d.kind === 'videoinput');
-            setVideoDevices(videoInputs);
-            if (videoInputs.length > 0) {
-                setSelectedDeviceId(videoInputs[0].deviceId);
-            }
-        });
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                const videoInputs = devices.filter(d => d.kind === 'videoinput');
+                setVideoDevices(videoInputs);
+                if (videoInputs.length > 0) {
+                    setSelectedDeviceId(videoInputs[0].deviceId);
+                }
+            }).catch(err => {
+                console.warn("Error enumerating devices:", err);
+                setError("Camera access restricted.");
+            });
+        } else {
+            console.warn("navigator.mediaDevices not available (likely insecure context)");
+            setError("Camera requires HTTPS or Localhost.");
+        }
 
         return () => stopCamera();
     }, []);
@@ -35,6 +43,9 @@ export default function ControlPanel({ onBack, data = {}, gpsPath = [], isConnec
             const constraints = {
                 video: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true
             };
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Camera API not available");
+            }
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;

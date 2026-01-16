@@ -33,7 +33,7 @@ export default function Header({ isConnected }) {
                         GROUND<span style={{ color: 'var(--accent-color)' }}>STATION</span>
                     </h1>
                     <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>
-                        v1.0.0 by Deeptanu (White-D-coder)
+                        v1.2.0 by Deeptanu (White-D-coder)
                     </span>
                 </div>
             </div>

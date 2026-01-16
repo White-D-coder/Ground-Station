@@ -69,13 +69,28 @@ app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
 });
 
+const os = require('os');
+
+function getLocalIP() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return '0.0.0.0';
+}
+
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
+    const ip = getLocalIP();
     console.log(`
     🚀 Ground Station Web Server Running!
     
     > Local:   http://localhost:${PORT}
-    > Network: http://0.0.0.0:${PORT}
+    > Network: http://${ip}:${PORT}
     
     Access this URL from any device on your network.
     `);

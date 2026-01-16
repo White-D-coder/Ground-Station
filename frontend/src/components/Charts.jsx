@@ -10,6 +10,7 @@ import {
     Legend
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import zoomPlugin from 'chartjs-plugin-zoom';
 
 ChartJS.register(
     CategoryScale,
@@ -18,7 +19,8 @@ ChartJS.register(
     LineElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    zoomPlugin
 );
 
 const options = {
@@ -34,6 +36,21 @@ const options = {
             bodyColor: '#fff',
             borderColor: '#333',
             borderWidth: 1
+        },
+        zoom: {
+            pan: {
+                enabled: true,
+                mode: 'xy', // Allow panning in both directions
+            },
+            zoom: {
+                wheel: {
+                    enabled: true,
+                },
+                pinch: {
+                    enabled: true
+                },
+                mode: 'xy', // Allow zooming in both directions
+            }
         }
     },
     scales: {

@@ -95,4 +95,78 @@ The system expects incoming data in **JSON format** ending with a newline (`\n`)
 *   **Compass Not Rotating**: The compass relies on GPS movement for bearing. Ensure the vehicle is moving or has a valid magnetic compass sensor.
 
 ---
-*Ground Station Control System v1.0*
+
+## 6. Hosting on Local Network
+
+You can host the Ground Station on your local network to access the Control Panel from other devices (e.g., tablets, phones, or other laptops).
+
+### Steps to Host
+
+1.  **Ensure the Frontend is Built**:
+    Run the following command to build the latest version of the interface:
+    ```bash
+    cd frontend && npm run build && cd ..
+    ```
+
+2.  **Start the Web Server**:
+    Run the hosting script from the project root:
+    ```bash
+    npm run serve
+    ```
+
+3.  **Access from Other Devices**:
+    The terminal will display the **Network URL** (e.g., `http://192.168.1.5:3001`).
+    Open this URL in the browser of your tablet or other device.
+
+> **Note**: Ensure your firewall allows incoming connections on port 3001.
+
+
+---
+
+## 7. Hosting Globally (Internet Access)
+
+To access the Ground Station from anywhere in the world (outside your local network), you need to expose your local server to the internet.
+
+Since the application requires access to your computer's **USB Serial Ports**, you cannot simply upload it to a cloud provider like Vercel or AWS. Instead, you must run the app on your laptop and use a **Tunneling Service**.
+
+### Recommended Tool: ngrok
+
+1.  **Download ngrok**:
+    Visit [ngrok.com](https://ngrok.com/download) and install the tool for your OS.
+
+2.  **Start the Ground Station**:
+    Ensure your app is running locally:
+    ```bash
+    npm run serve
+    ```
+
+3.  **Start the Tunnel**:
+    Open a *new* terminal window and run:
+    ```bash
+    ngrok http 3001
+    ```
+
+4.  **Access Globally**:
+    ngrok will generate a public URL (e.g., `https://a1b2-c3d4.ngrok-free.app`).
+    You can open this URL on any device, anywhere in the world, to view your Ground Station and control the vehicle.
+
+
+---
+
+## 8. Distribution (How to Share)
+
+To allow other users to use the Ground Station with their own hardware, you can share the installer file.
+
+### macOS Users
+1.  Locate the installer file in the `release` folder:
+    `GroundStation Ground Station-1.0.0-arm64.dmg` (for Apple Silicon) or `.dmg` (for Intel).
+2.  Upload this file to Google Drive, Dropbox, or your website.
+3.  Users download the `.dmg` file, open it, and drag the app to their Applications folder.
+4.  **Note**: Since the app is not signed by Apple, they may need to right-click and select "Open" the first time to bypass the security warning.
+
+### Windows Users
+(To build for Windows, run `npm run dist` on a Windows machine)
+1.  Share the generated `.exe` file.
+2.  Users simply run the installer.
+
+

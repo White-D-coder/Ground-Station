@@ -43,28 +43,41 @@ export default function Compass2D({ heading = 0 }) {
     }
 
     return (
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'black', borderRadius: '50%', overflow: 'hidden' }}>
-            <svg viewBox="-80 -80 160 160" width="100%" height="100%">
-                <g transform={`rotate(${-normalizedHeading})`}>
-                    {ticks}
-                    {numbers}
-                    <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(0)">N</text>
-                    <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(90)">E</text>
-                    <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(180)">S</text>
-                    <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(270)">W</text>
-                </g>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', overflow: 'hidden' }}>
+            <div style={{
+                aspectRatio: '1',
+                height: '100%',
+                maxHeight: '100%',
+                maxWidth: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'black',
+                borderRadius: '50%',
+                overflow: 'hidden'
+            }}>
+                <svg viewBox="-80 -80 160 160" width="100%" height="100%">
+                    <g transform={`rotate(${-normalizedHeading})`}>
+                        {ticks}
+                        {numbers}
+                        <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(0)">N</text>
+                        <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(90)">E</text>
+                        <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(180)">S</text>
+                        <text x="0" y="-55" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" transform="rotate(270)">W</text>
+                    </g>
 
-                <line x1="-20" y1="0" x2="20" y2="0" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-                <line x1="0" y1="-20" x2="0" y2="20" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-                <circle cx="0" cy="0" r="25" fill="rgba(255,255,255,0.1)" />
+                    <line x1="-20" y1="0" x2="20" y2="0" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                    <line x1="0" y1="-20" x2="0" y2="20" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                    <circle cx="0" cy="0" r="25" fill="rgba(255,255,255,0.1)" />
 
-                <path d="M-4,-70 L4,-70 L0,-78 Z" fill="red" />
-                <line x1="0" y1="45" x2="0" y2="75" stroke="white" strokeWidth="3" />
+                    <path d="M-4,-70 L4,-70 L0,-78 Z" fill="red" />
+                    <line x1="0" y1="45" x2="0" y2="75" stroke="white" strokeWidth="3" />
 
-                <text x="0" y="50" fill="white" fontSize="10" textAnchor="middle" opacity="0.8">
-                    {Math.round(normalizedHeading)}°
-                </text>
-            </svg>
+                    <text x="0" y="50" fill="white" fontSize="10" textAnchor="middle" opacity="0.8">
+                        {Math.round(normalizedHeading)}°
+                    </text>
+                </svg>
+            </div>
         </div>
     );
 }
