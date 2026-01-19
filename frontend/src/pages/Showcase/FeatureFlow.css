@@ -1,190 +1,128 @@
-/* FeatureFlow.css */
+/* FeatureFlow.css - Pipeline Redesign */
 
 .flow-container {
     padding: 6rem 2rem;
-    background: #000;
-    color: #fff;
+    background: #f8f9fa;
+    color: #111;
     overflow-x: auto;
     font-family: 'Inter', sans-serif;
 }
 
 .flow-title {
     text-align: center;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     margin-bottom: 0.5rem;
-    color: #fff;
+    color: #000;
 }
 
 .flow-subtitle {
     text-align: center;
     color: #666;
-    margin-bottom: 5rem;
+    margin-bottom: 4rem;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-/* Mind Map Layout */
-.mindmap {
+.pipeline-wrapper {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
     min-width: 800px;
-    /* Simulate the 'pencil' stroke color */
-    color: #ddd;
+    /* Ensure structure holds on small screens */
 }
 
-/* Nodes */
-.mm-content {
-    border: 1px solid #fff;
-    padding: 10px 20px;
-    border-radius: 4px;
-    background: #000;
+.pipeline-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     position: relative;
-    z-index: 2;
-    font-weight: 600;
-    font-size: 0.9rem;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    transition: transform 0.3s ease;
+}
+
+.pipeline-stage:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Connectors between stages */
+.stage-arrow {
+    position: absolute;
+    right: -1.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    color: #ccc;
+    font-weight: 300;
+    z-index: 10;
+}
+
+/* Hide arrow for last child */
+.pipeline-stage:last-child .stage-arrow {
+    display: none;
+}
+
+.stage-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #eee;
+    /* Fallback color */
+    /* Color injected via inline style */
+}
+
+.stage-icon {
+    font-size: 1.5rem;
+}
+
+.stage-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    white-space: nowrap;
+    font-weight: 700;
 }
 
-.root>.mm-content {
+.stage-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
+.flow-card {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #444;
+    border-left: 3px solid #ccc;
+    transition: all 0.2s;
+}
+
+.flow-card:hover {
     background: #fff;
-    color: #000;
-    border-color: #fff;
-    font-weight: 800;
+    border-left-color: #000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Structure */
-.mm-node.root {
-    display: flex;
-    align-items: center;
-}
-
-.mm-branches {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    /* Reduced vertical gap (was 40px) */
-    margin-left: 100px;
-    /* Increased horizontal margin (was 60px) */
-    position: relative;
-    padding: 20px 0;
-}
-
-.mm-branch {
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.mm-leaves {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    /* Reduced vertical gap (was 15px) */
-    margin-left: 80px;
-    /* Increased horizontal margin (was 40px) */
-    position: relative;
-    padding: 10px 0;
-}
-
-.mm-leaf {
-    font-size: 0.8rem;
-    color: #aaa;
-    position: relative;
-    padding: 5px 0;
-}
-
-/* 
-   CONNECTOR LINES - The "Sketch" Look 
-   Using borders and border-radius to create curved paths.
-*/
-
-/* 1. Branch Connectors (Root -> Branches) */
-.mm-branch::before {
-    display: none;
-}
-
-/* Spine for Branches */
-.mm-branches {
-    border-left: 1px solid #666;
-    border-radius: 20px 0 0 20px;
-    /* Curve the main spine */
-    padding-left: 30px;
-    /* Space from spine to node */
-    /* margin-left is width from root-end to spine */
-}
-
-/* Connector from Spine to Branch Node */
-.mm-branch::after {
-    content: '';
-    position: absolute;
-    left: -30px;
-    top: 50%;
-    width: 30px;
-    height: 1px;
-    background: #666;
-}
-
-/* Connector from Root to Spine */
-.root>.mm-content {
-    position: relative;
-}
-
-.root>.mm-content::after {
-    content: '';
-    position: absolute;
-    right: -100px;
-    /* Match the new margin to reach the spine start roughly, actually simpler: 
-                      The margin creates space, we draw a line across it. */
-    top: 50%;
-    width: 100px;
-    /* Match the margin */
-    height: 1px;
-    background: #666;
-}
-
-/* But wait, the margin is on .mm-branches container. 
-   The line from .root > .mm-content needs to span that margin.
-*/
-
-/* Leaves Spine */
-.mm-leaves {
-    border-left: 1px solid #666;
-    border-radius: 10px 0 0 10px;
-    padding-left: 20px;
-    /* margin-left creates space between branch node and leaves spine */
-}
-
-/* Connector from Branch Node to Leaves Spine */
-.mm-node .mm-content::after {
-    content: '';
-    position: absolute;
-    right: -80px;
-    /* Match the new margin */
-    top: 50%;
-    width: 80px;
-    /* Match the new margin */
-    height: 1px;
-    background: #666;
-}
-
-/* Hide connector for leaves since they are end nodes */
-.mm-leaf::after {
-    display: none;
-}
-
-.mm-leaf::before {
-    content: '';
-    position: absolute;
-    left: -20px;
-    /* Match padding-left of leaves */
-    top: 50%;
-    width: 20px;
-    height: 1px;
-    background: #666;
+.flow-card.primary {
+    background: #000;
+    color: #fff;
+    border-left: 3px solid #339933;
+    /* Core Green */
 }

@@ -2,13 +2,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
 
 :root {
-    --primary-color: #ffffff;
-    --secondary-color: #666666;
-    --bg-color: #000000;
-    --text-color: #ffffff;
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.15);
-    --hover-glow: rgba(255, 255, 255, 0.2);
+    /* Light Theme Variables */
+    --primary-color: #000000;
+    --secondary-color: #444444;
+    --bg-color: #f8f9fa;
+    /* Clean off-white */
+    --text-color: #111111;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --hover-glow: rgba(0, 0, 0, 0.1);
 }
 
 .landing-container {
@@ -30,7 +32,8 @@
     width: 100%;
     z-index: 1000;
     border-bottom: 1px solid var(--glass-border);
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.8);
+    /* Light navbar */
 }
 
 .nav-logo {
@@ -38,7 +41,7 @@
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #fff;
+    color: #000;
 }
 
 .nav-links-group {
@@ -47,7 +50,8 @@
 }
 
 .nav-link {
-    color: #888;
+    color: #555;
+    /* Darker grey for light mode */
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
@@ -58,7 +62,7 @@
 
 .nav-link:hover,
 .nav-link.active-link {
-    color: #fff;
+    color: #000;
 }
 
 
@@ -79,7 +83,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, #111 0%, #000 70%);
+    /* Subtle light gradient */
+    background: radial-gradient(circle at center, #ffffff 0%, #e0e0e0 100%);
     z-index: -1;
 }
 
@@ -89,7 +94,7 @@
     margin-bottom: 1rem;
     letter-spacing: -3px;
     line-height: 1;
-    color: #fff;
+    color: #000;
 }
 
 .hero-content h1 span {
@@ -98,13 +103,13 @@
     font-weight: 400;
     letter-spacing: 5px;
     margin-top: 1rem;
-    color: #888;
+    color: #555;
     text-transform: uppercase;
 }
 
 .hero-subtitle {
     font-size: 1.2rem;
-    color: #666;
+    color: #444;
     margin-bottom: 3rem;
     max-width: 600px;
     margin-left: auto;
@@ -119,9 +124,10 @@
     justify-content: center;
 }
 
+/* Inverted Button Styles for Light Mode */
 .cta-button {
-    background: #fff;
-    color: #000;
+    background: #000;
+    color: #fff;
     padding: 1rem 3rem;
     font-size: 1rem;
     font-weight: 700;
@@ -134,24 +140,25 @@
 
 .cta-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 }
 
 .cta-button.secondary {
     background: transparent;
-    color: #fff;
-    border: 1px solid #333;
+    color: #000;
+    border: 1px solid #000;
 }
 
 .cta-button.secondary:hover {
-    border-color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /* Features Section */
 .features-section {
     padding: 8rem 2rem;
-    background: #000;
+    background: #f8f9fa;
+    /* Match bg-color */
+    color: #111;
 }
 
 .section-title {
@@ -161,7 +168,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 5px;
-    color: #333;
+    color: #000;
 }
 
 .features-grid {
@@ -173,27 +180,30 @@
 }
 
 .feature-card {
-    background: var(--glass-bg);
-    border: 1px solid #1a1a1a;
+    background: #fff;
+    border: 1px solid #e0e0e0;
     padding: 2.5rem;
     transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
 .feature-card:hover {
     transform: translateY(-5px);
-    border-color: #444;
+    border-color: #bbb;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    /* Soft shadow */
 }
 
 .feature-card h3 {
     font-size: 1.2rem;
     margin-bottom: 1rem;
-    color: #fff;
+    color: #000;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .feature-card p {
-    color: #666;
+    color: #555;
     line-height: 1.8;
     font-weight: 300;
 }
@@ -202,7 +212,7 @@
 .gallery-section {
     padding: 5rem 2rem;
     text-align: center;
-    background: #000;
+    background: #f8f9fa;
 }
 
 .gallery-grid {
@@ -214,18 +224,19 @@
 }
 
 .gallery-item {
-    border: 1px solid #222;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     overflow: hidden;
     position: relative;
     transition: all 0.3s ease;
-    background: #050505;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
 }
 
 .gallery-item:hover {
     transform: translateY(-5px);
-    border-color: #444;
-    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
+    border-color: #bbb;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
 }
 
 .image-wrapper {
@@ -240,12 +251,12 @@
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
-    filter: grayscale(20%);
+    filter: none;
+    /* No grayscale in light mode for vibrance */
 }
 
 .gallery-item:hover .image-wrapper img {
     transform: scale(1.05);
-    filter: grayscale(0%);
 }
 
 .overlay {
@@ -254,8 +265,9 @@
     left: 0;
     width: 100%;
     padding: 1.5rem;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-    color: #fff;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95), transparent);
+    /* Light gradient */
+    color: #000;
     text-align: left;
     transform: translateY(20px);
     opacity: 0;
@@ -272,11 +284,12 @@
     margin: 0 0 0.5rem 0;
     text-transform: uppercase;
     letter-spacing: 1px;
+    color: #000;
 }
 
 .overlay p {
     font-size: 0.9rem;
-    color: #bbb;
+    color: #444;
     margin: 0;
 }
 
@@ -284,19 +297,20 @@
 .creator-section {
     padding: 6rem 2rem;
     text-align: center;
-    background: #050505;
-    border-top: 1px solid #111;
+    background: #f0f0f0;
+    /* Slight contrast footer */
+    border-top: 1px solid #ddd;
 }
 
 .creator-section p {
-    color: #444;
+    color: #666;
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 2px;
 }
 
 .creator-section span {
-    color: #fff;
+    color: #000;
     font-weight: 600;
 }
 
@@ -315,10 +329,11 @@
     }
 }
 
-/* Tech Stack Styling - appended */
+/* Tech Stack Styling - Light Mode */
 .tech-stack-container {
     margin-top: 5rem;
-    opacity: 0.9;
+    opacity: 1;
+    /* Full opacity on light */
 }
 
 .tech-label {
@@ -326,7 +341,7 @@
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-bottom: 2rem;
-    color: #444;
+    color: #555;
     font-weight: 600;
 }
 
@@ -340,27 +355,34 @@
 }
 
 .tech-pill {
-    border: 1px solid #333;
+    /* Light mode pill */
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid var(--tech-color, #888);
     padding: 0.8rem 1.5rem;
-    color: #888;
+    color: #444;
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 1px;
-    background: rgba(0, 0, 0, 0.5);
+    background: #fff;
     transition: all 0.3s ease;
     clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .tech-pill:hover {
-    color: var(--hover-color, #fff);
-    border-color: var(--hover-color, #fff);
-    background: rgba(255, 255, 255, 0.05);
+    color: #000;
+    /* Darker text on hover */
+    border-color: var(--tech-color, #bbb);
+    background: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 0 15px var(--hover-color, rgba(255, 255, 255, 0.1));
+    /* Colorized shadow in light mode */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1), inset 0 0 10px var(--tech-color, transparent);
+    /* removed text-shadow which looks bad on light bg */
 }
 
+/* The gradient swipe */
 .tech-pill::before {
     content: '';
     position: absolute;
@@ -368,9 +390,10 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, var(--hover-color, rgba(255, 255, 255, 0.1)), transparent);
+    /* Use a color tint based on tech-color */
+    background: linear-gradient(90deg, transparent, var(--tech-color, rgba(0, 0, 0, 0.05)), transparent);
     transition: left 0.5s ease;
-    opacity: 0.3;
+    opacity: 0.2;
 }
 
 .tech-pill:hover::before {

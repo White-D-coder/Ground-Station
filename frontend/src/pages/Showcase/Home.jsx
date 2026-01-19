@@ -44,7 +44,7 @@ const Home = () => {
                             <span
                                 key={tech.name}
                                 className="tech-pill"
-                                style={{ '--hover-color': tech.color }}
+                                style={{ '--tech-color': tech.color }}
                             >
                                 {tech.name}
                             </span>
