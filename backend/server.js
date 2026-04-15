@@ -64,20 +64,46 @@ lora.on('lora_update', (data) => {
 const REMOTE_RELAY_URL = process.env.REMOTE_RELAY_URL;
 if (REMOTE_RELAY_URL) {
     console.log(`📡 Global Relay Active: Pushing data to ${REMOTE_RELAY_URL}`);
+    
+    // Listen for Remote Commands (Cloud -> Local)
+    const WebSocket = require('ws');
+    const wsUrl = REMOTE_RELAY_URL.replace(/^http/, 'ws') + '/ws';
+    const cloudWs = new WebSocket(wsUrl);
+
+    cloudWs.on('open', () => console.log('✅ Connected to Cloud Command Bridge'));
+    cloudWs.on('message', (msg) => {
+        try {
+            const json = JSON.parse(msg.toString());
+            if (json.type === 'command') {
+                console.log(`🚀 Executing Cloud Command: ${json.command}`);
+                serial.write(json.command + '\n');
+            }
+        } catch (e) { }
+    });
 }
 
 async function relayToCloud(type, data) {
     if (!REMOTE_RELAY_URL) return;
     try {
-        await fetch(`${REMOTE_RELAY_URL}/api/relay`, {
+        const response = await fetch(`${REMOTE_RELAY_URL}/api/relay`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, data })
         });
-    } catch (e) {
-        // Silently fail to avoid crashing the local process
-    }
+        if (response.ok) {
+            // console.log(`✅ [Relay] Pushed ${type} data successfully`);
+        }
+    } catch (e) { }
 }
+
+// Push port list periodically to Cloud
+setInterval(async () => {
+    if (!REMOTE_RELAY_URL) return;
+    try {
+        const ports = await serial.listPorts();
+        relayToCloud('ports_list', ports);
+    } catch (e) { }
+}, 5000);
 
 serial.on('telemetry', (data) => relayToCloud('telemetry', data));
 can.on('can_update', (data) => relayToCloud('can', data));

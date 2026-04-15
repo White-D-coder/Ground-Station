@@ -87,6 +87,16 @@ const createWebApi = () => {
                     method: 'POST',
                     headers: { 'ngrok-skip-browser-warning': 'true' }
                 });
+            },
+            write: async (cmd) => {
+                await fetch(apiUrl('/api/command'), {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true' 
+                    },
+                    body: JSON.stringify({ command: cmd.trim(), secret: 'secret123' })
+                });
             }
         },
         on: {

@@ -7,6 +7,7 @@ const backend = require('./backend/server');
 
 const app = express();
 const server = http.createServer(app);
+let remotePorts = [];
 const wss = new WebSocket.Server({ server, path: '/ws' }); // Explicit path match
 
 // Simulation Mode for Debugging
@@ -40,6 +41,10 @@ app.use(express.static(distPath));
 
 app.get('/api/ports', async (req, res) => {
     try {
+        // If we are in production (Render) and have remote ports from a laptop, use them
+        if (process.env.NODE_ENV === 'production' && remotePorts.length > 0) {
+            return res.json(remotePorts);
+        }
         const ports = await backend.serial.listPorts();
         res.json(ports);
     } catch (err) {
@@ -68,7 +73,27 @@ app.post('/api/disconnect', (req, res) => {
 
 app.post('/api/relay', (req, res) => {
     const { type, data } = req.body;
+    if (type === 'ports_list') {
+        remotePorts = data;
+    }
     broadcast({ type, data });
+    res.json({ success: true });
+});
+
+// Command Relay: From Cloud -> Local
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'secret123';
+
+app.post('/api/command', (req, res) => {
+    const { command, secret } = req.body;
+    
+    if (secret !== ADMIN_SECRET) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    console.log(`📡 Cloud Command Received: ${command}`);
+    
+    // Broadcast to all clients (One of which will be your local laptop)
+    broadcast({ type: 'command', command });
     res.json({ success: true });
 });
 
