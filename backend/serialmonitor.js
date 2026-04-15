@@ -132,8 +132,9 @@ class SerialMonitor extends EventEmitter {
             if (values.every(v => !isNaN(v))) {
                 // Generate generic keys if schema not set
                 const data = {};
-                values.forEach((v, i) => data[`val_${i}`] = v);
+                values.forEach((v, i) => data[`CH_${i + 1}`] = v);
                 this.detectSchema('csv_raw', data);
+
                 this.emit('telemetry', { type: 'csv_raw', data: data, raw: text });
                 return;
             }

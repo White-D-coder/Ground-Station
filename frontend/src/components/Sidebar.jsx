@@ -273,8 +273,6 @@ export default function Sidebar(props) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <button onClick={() => exportData('json')} className="btn-icon">JSON</button>
                     <button onClick={() => exportData('csv')} className="btn-icon">CSV</button>
-                    <button onClick={() => exportData('xlsx')} className="btn-icon">XLSX</button>
-                    <button onClick={() => exportData('kml')} className="btn-icon">KML</button>
                 </div>
 
                 <button
@@ -291,70 +289,8 @@ export default function Sidebar(props) {
                 >
                     <History size={16} /> VIEW HISTORY
                 </button>
-
-                <button
-                    onClick={() => setView('track')}
-                    className="btn-primary"
-                    style={{
-                        width: '100%',
-                        marginTop: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                    }}
-                >
-                    <Map size={16} /> TRACK VISUALIZER
-                </button>
-
-                <button
-                    onClick={() => setView('control')}
-                    className="btn-primary"
-                    style={{
-                        width: '100%',
-                        marginTop: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                    }}
-                >
-                    <Gamepad size={16} /> CONTROL SYSTEM
-                </button>
             </div>
 
-            <div className="panel-section">
-                <div className="panel-header">
-                    Advanced
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>CAN Interface</label>
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                        <input
-                            value={canIface}
-                            onChange={(e) => setCanIface(e.target.value)}
-                            style={{ flex: 1, width: '100%' }}
-                        />
-                        <button onClick={handleCanListen} className="btn-icon">GO</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>LoRa Port</label>
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                        <select
-                            value={loraPort}
-                            onChange={(e) => setLoraPort(e.target.value)}
-                            style={{ flex: 1, width: '100%' }}
-                        >
-                            <option value="">Select Port</option>
-                            {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
-                        </select>
-                        <button onClick={handleLoraListen} className="btn-icon">GO</button>
-                    </div>
-                </div>
-            </div>
 
             <div className="panel-section" style={{ marginTop: 'auto', border: 'none', background: 'transparent', padding: 0 }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
