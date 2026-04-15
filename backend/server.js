@@ -61,6 +61,11 @@ lora.on('lora_update', (data) => {
 });
 
 // Initialize
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:launch%40007@groundstation.kmljlk7.mongodb.net/';
+if (MONGODB_URI) {
+    db.connectRemote(MONGODB_URI, 'groundstation');
+}
+
 loadPlugins();
 
 module.exports = {
