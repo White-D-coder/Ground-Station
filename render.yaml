@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ground-station
+    env: node
+    plan: free
+    buildCommand: "npm run build"
+    startCommand: "npm run serve"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromContext: env
+      - key: SIMULATE
+        value: "true" # Leave as true for initially checking deployment

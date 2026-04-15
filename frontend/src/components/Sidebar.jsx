@@ -7,6 +7,7 @@ export default function Sidebar(props) {
     const [selectedPort, setSelectedPort] = useState('');
     const selectedPortRef = React.useRef(selectedPort);
     const [baudRate, setBaudRate] = useState(115200);
+    const [isManualPort, setIsManualPort] = useState(false);
 
     useEffect(() => {
         selectedPortRef.current = selectedPort;
@@ -117,29 +118,62 @@ export default function Sidebar(props) {
                 </div>
 
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
-                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>PORT</label>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                        <select
-                            style={{
-                                flex: 1,
-                                minWidth: 0, // Fix overflow
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'white',
-                                padding: '6px',
-                                borderRadius: '4px',
-                                outline: 'none'
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>PORT</label>
+                        <button 
+                            onClick={() => setIsManualPort(!isManualPort)}
+                            style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: 'var(--accent-color)', 
+                                fontSize: '0.65rem', 
+                                cursor: 'pointer',
+                                textDecoration: 'underline'
                             }}
-                            value={selectedPort}
-                            onChange={(e) => setSelectedPort(e.target.value)}
-                            disabled={isConnected}
                         >
-                            {ports.length === 0 && <option>No Ports Found</option>}
-                            {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
-                        </select>
+                            {isManualPort ? 'Switch to Auto' : 'Enter Manually'}
+                        </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                        {isManualPort ? (
+                            <input
+                                placeholder="e.g. COM3 or /dev/ttyUSB0"
+                                style={{
+                                    flex: 1,
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid var(--accent-color)',
+                                    color: 'white',
+                                    padding: '6px',
+                                    borderRadius: '4px',
+                                    outline: 'none'
+                                }}
+                                value={selectedPort}
+                                onChange={(e) => setSelectedPort(e.target.value)}
+                                disabled={isConnected}
+                            />
+                        ) : (
+                            <select
+                                style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white',
+                                    padding: '6px',
+                                    borderRadius: '4px',
+                                    outline: 'none'
+                                }}
+                                value={selectedPort}
+                                onChange={(e) => setSelectedPort(e.target.value)}
+                                disabled={isConnected}
+                            >
+                                {ports.length === 0 && <option>No Ports Found</option>}
+                                {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
+                            </select>
+                        )}
                         <button
                             onClick={refreshPorts}
-                            disabled={isConnected}
+                            disabled={isConnected || isManualPort}
                             className="btn-icon"
                             title="Refresh Ports"
                             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}

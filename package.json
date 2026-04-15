@@ -7,6 +7,7 @@
         "start": "electron .",
         "dev": "NODE_ENV=development electron .",
         "serve": "node server-web.js",
+        "build": "npm install && cd frontend && npm install && npm run build",
         "dist": "cd frontend && npm run build && cd .. && electron-builder"
     },
     "build": {
