@@ -188,10 +188,12 @@ function GroundStation() {
             if (liveTimeoutRef.current) clearTimeout(liveTimeoutRef.current);
             liveTimeoutRef.current = setTimeout(() => setIsLive(false), 3000);
 
-            // Track GPS Path (Disable for now as user wants to remove telemetry)
-            // if (d.gps && d.gps.lat !== 0 && d.gps.lon !== 0) {
-            //     setGpsPath(prev => [...prev, { lat: d.gps.lat, lon: d.gps.lon }]);
-            // }
+            // Track GPS Path
+            if (d.gps && d.gps.lat !== 0 && d.gps.lon !== 0) {
+                setGpsPath(prev => [...prev, { lat: d.gps.lat, lon: d.gps.lon }]);
+            } else if (d.lat && d.lon && d.lat !== 0 && d.lon !== 0) {
+                setGpsPath(prev => [...prev, { lat: d.lat, lon: d.lon }]);
+            }
 
             if (isRecording) {
                 setMissionData(prev => [...prev, { ...d, timestamp: Date.now() }]);
@@ -226,11 +228,19 @@ function GroundStation() {
                     currentView={currentView}
                 />
                 {currentView === 'dashboard' ? (
-                    <div className="dashboard-grid" style={{ display: 'flex', gap: '20px', padding: '20px' }}>
-                        <ReceiverChannels data={serialData} />
-                        <LogConsole logs={logs} />
+                    <div className="dashboard-grid">
+                        <div className="top-row">
+                            <ReceiverChannels data={serialData} />
+                            <CubeSat data={serialData} />
+                            <Map lat={serialData.gps?.lat || serialData.lat} lon={serialData.gps?.lon || serialData.lon} />
+                        </div>
+                        <div className="bottom-row">
+                            <Charts data={serialData} />
+                            <LogConsole logs={logs} />
+                        </div>
                     </div>
                 ) : currentView === 'history' ? (
+
                     <History onBack={() => setCurrentView('dashboard')} />
                 ) : currentView === 'track' ? (
                     <TrackVisualizer
