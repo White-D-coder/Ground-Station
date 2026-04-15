@@ -120,6 +120,8 @@ function GroundStation() {
     const [gpsPath, setGpsPath] = useState([]);
 
     const [isReady, setIsReady] = useState(false);
+    const [isLive, setIsLive] = useState(false);
+    const liveTimeoutRef = useRef(null);
 
     const apiRef = useRef(null);
 
@@ -169,6 +171,11 @@ function GroundStation() {
             console.log("App received telemetry:", eventData);
             const d = eventData.data || eventData;
             setSerialData(d);
+            
+            // Set live status
+            setIsLive(true);
+            if (liveTimeoutRef.current) clearTimeout(liveTimeoutRef.current);
+            liveTimeoutRef.current = setTimeout(() => setIsLive(false), 3000);
 
             // Track GPS Path
             if (d.gps && d.gps.lat !== 0 && d.gps.lon !== 0) {
@@ -197,7 +204,7 @@ function GroundStation() {
 
     return (
         <div className="app-container">
-            <Header isConnected={isConnected} />
+            <Header isConnected={isLive || isConnected} />
             <div className="main-content">
                 <Sidebar
                     setIsConnected={setIsConnected}
