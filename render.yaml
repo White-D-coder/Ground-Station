@@ -9,6 +9,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        fromContext: env
+        sync: false
       - key: SIMULATE
         value: "true" # Leave as true for initially checking deployment
