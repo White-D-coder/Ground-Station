@@ -106,6 +106,7 @@ setInterval(async () => {
 }, 5000);
 
 serial.on('telemetry', (data) => relayToCloud('telemetry', data));
+serial.on('raw', (data) => relayToCloud('raw', data));
 can.on('can_update', (data) => relayToCloud('can', data));
 lora.on('lora_update', (data) => relayToCloud('lora', data));
 
