@@ -66,6 +66,12 @@ app.post('/api/disconnect', (req, res) => {
     }
 });
 
+app.post('/api/relay', (req, res) => {
+    const { type, data } = req.body;
+    broadcast({ type, data });
+    res.json({ success: true });
+});
+
 wss.on('connection', (ws) => {
     console.log('Client connected');
 

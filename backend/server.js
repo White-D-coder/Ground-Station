@@ -60,6 +60,29 @@ lora.on('lora_update', (data) => {
     runHooks('onLora', data);
 });
 
+// Global Relay Logic
+const REMOTE_RELAY_URL = process.env.REMOTE_RELAY_URL;
+if (REMOTE_RELAY_URL) {
+    console.log(`📡 Global Relay Active: Pushing data to ${REMOTE_RELAY_URL}`);
+}
+
+async function relayToCloud(type, data) {
+    if (!REMOTE_RELAY_URL) return;
+    try {
+        await fetch(`${REMOTE_RELAY_URL}/api/relay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, data })
+        });
+    } catch (e) {
+        // Silently fail to avoid crashing the local process
+    }
+}
+
+serial.on('telemetry', (data) => relayToCloud('telemetry', data));
+can.on('can_update', (data) => relayToCloud('can', data));
+lora.on('lora_update', (data) => relayToCloud('lora', data));
+
 // Initialize
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:launch%40007@groundstation.kmljlk7.mongodb.net/';
 if (MONGODB_URI) {
