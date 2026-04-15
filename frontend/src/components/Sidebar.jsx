@@ -167,9 +167,13 @@ export default function Sidebar(props) {
                                 onChange={(e) => setSelectedPort(e.target.value)}
                                 disabled={isConnected}
                             >
-                                {ports.length === 0 && <option>No Ports Found</option>}
+                                <option value="">Select Port</option>
+                                <option value="BROWSER_DIRECT" style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>🌐 BROWSER DIRECT (Cloud Mode)</option>
+                                <hr />
+                                {ports.length === 0 && <option disabled>No Backend Ports Found</option>}
                                 {ports.map(p => <option key={p.path} value={p.path}>{p.path}</option>)}
                             </select>
+
                         )}
                         <button
                             onClick={refreshPorts}

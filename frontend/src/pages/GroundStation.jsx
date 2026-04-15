@@ -64,6 +64,60 @@ const createWebApi = () => {
     // Helper to build full API URL
     const apiUrl = (endpoint) => `${API_BASE}${endpoint}`;
 
+    // New: Web Serial API Support (Cloud-only Mode)
+    let webSerialPort = null;
+    let webSerialReader = null;
+
+    const readWebSerial = async () => {
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (webSerialPort && webSerialPort.readable) {
+            webSerialReader = webSerialPort.readable.getReader();
+            try {
+                while (true) {
+                    const { value, done } = await webSerialReader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    listeners.raw.forEach(cb => cb(chunk)); // Emit raw
+                    
+                    buffer += chunk;
+                    let boundary = buffer.indexOf('\n');
+                    while (boundary !== -1) {
+                        const line = buffer.substring(0, boundary).trim();
+                        buffer = buffer.substring(boundary + 1);
+                        if (line) {
+                            // Simple parsing for Browser Mode (Mirroring backend logic)
+                            try {
+                                if (line.startsWith('{')) {
+                                    const json = JSON.parse(line);
+                                    listeners.telemetry.forEach(cb => cb(json));
+                                } else if (line.includes(',') || line.includes(':')) {
+                                    const fields = line.split(',');
+                                    const data = {};
+                                    fields.forEach((f, i) => {
+                                        if (f.includes(':')) {
+                                            const [k, v] = f.split(':');
+                                            data[k.trim()] = parseFloat(v);
+                                        } else {
+                                            data[`CH_${i + 1}`] = parseFloat(f);
+                                        }
+                                    });
+                                    listeners.telemetry.forEach(cb => cb(data));
+                                }
+                            } catch (e) {}
+                        }
+                        boundary = buffer.indexOf('\n');
+                    }
+                }
+            } catch (error) {
+                console.error("Web Serial Read Error:", error);
+            } finally {
+                webSerialReader.releaseLock();
+            }
+        }
+    };
+
     return {
         serial: {
             list: async () => {
@@ -73,6 +127,18 @@ const createWebApi = () => {
                 return await res.json();
             },
             connect: async (port, baud) => {
+                // If it's a "WebDirect" request
+                if (port === 'BROWSER_DIRECT') {
+                    if (!navigator.serial) {
+                        alert("Web Serial is not supported in this browser. Use Chrome or Edge.");
+                        return;
+                    }
+                    webSerialPort = await navigator.serial.requestPort();
+                    await webSerialPort.open({ baudRate: parseInt(baud) });
+                    readWebSerial();
+                    return { success: true, mode: 'web' };
+                }
+
                 await fetch(apiUrl('/api/connect'), {
                     method: 'POST',
                     headers: {
@@ -83,12 +149,23 @@ const createWebApi = () => {
                 });
             },
             disconnect: async () => {
+                if (webSerialPort) {
+                    if (webSerialReader) await webSerialReader.cancel();
+                    await webSerialPort.close();
+                    webSerialPort = null;
+                }
                 await fetch(apiUrl('/api/disconnect'), {
                     method: 'POST',
                     headers: { 'ngrok-skip-browser-warning': 'true' }
                 });
             },
             write: async (cmd) => {
+                if (webSerialPort && webSerialPort.writable) {
+                    const writer = webSerialPort.writable.getWriter();
+                    const encoder = new TextEncoder();
+                    await writer.write(encoder.encode(cmd + '\n'));
+                    writer.releaseLock();
+                }
                 await fetch(apiUrl('/api/command'), {
                     method: 'POST',
                     headers: { 
@@ -113,6 +190,7 @@ const createWebApi = () => {
         can: { listen: () => { } },
         lora: { listen: () => { } }
     };
+
 };
 
 import History from '../components/History';
