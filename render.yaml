@@ -11,4 +11,5 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: SIMULATE
-        value: "true" # Leave as true for initially checking deployment
+        value: "false"
+
