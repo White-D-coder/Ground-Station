@@ -1,4 +1,4 @@
-# Antigravity Ground Station Pro
+# Ground Station Pro
 
 A professional desktop Ground Station built with Electron, Node.js, and Leaflet.
 
@@ -31,5 +31,3 @@ A professional desktop Ground Station built with Electron, Node.js, and Leaflet.
 - **Frontend**: `/frontend` - UI, Map, Charts.
 - **Electron**: `/electron` - App lifecycle and IPC.
 
-## License
-ISC
